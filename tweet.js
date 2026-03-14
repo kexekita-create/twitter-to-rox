@@ -1,5 +1,5 @@
-import fetch from "node-fetch";
-import * as cheerio from "cheerio";
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const cheerio = require("cheerio");
 
 const username = process.env.TWITTER_USER;
 const webhook = process.env.DISCORD_WEBHOOK;

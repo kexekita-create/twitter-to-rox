@@ -1,0 +1,20 @@
+name: Tweet to Discord
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # 10分ごとに実行
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm install node-fetch cheerio
+      - run: node tweet.js
+        env:
+          TWITTER_USER: ${{ secrets.TWITTER_USER }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}

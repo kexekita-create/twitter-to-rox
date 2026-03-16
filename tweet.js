@@ -47,7 +47,7 @@ async function main() {
 
   await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
 
-  // X は JS で描画されるので、ツイート本文が出るまで待つ
+  // ツイートが描画されるまで待つ
   await page.waitForSelector("article", { timeout: 60000 });
 
   const html = await page.content();
@@ -55,8 +55,22 @@ async function main() {
 
   const $ = cheerio.load(html);
 
-  // X の最新ツイート本文を取得
-  const tweet = $("article div[data-testid='tweetText']").first().text().trim();
+  // ★ 最新ツイートを確実に拾うロジック（複数パターン対応）
+  let tweet = "";
+  const articles = $("article");
+
+  articles.each((i, el) => {
+    if (tweet) return;
+
+    const text =
+      $(el).find("div[data-testid='tweetText']").text().trim() ||
+      $(el).find("div[lang]").text().trim() ||
+      $(el).find("span").text().trim();
+
+    if (text) {
+      tweet = text;
+    }
+  });
 
   if (!tweet) {
     console.log("No tweet found.");

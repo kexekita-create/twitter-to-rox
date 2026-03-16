@@ -6,13 +6,18 @@ const webhook = process.env.DISCORD_WEBHOOK;
 
 function fetchHTML(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
+    https.get(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+      }
+    }, (res) => {
       let data = "";
       res.on("data", (chunk) => (data += chunk));
       res.on("end", () => resolve(data));
     }).on("error", reject);
   });
 }
+
 
 function postToDiscord(message) {
   return new Promise((resolve, reject) => {

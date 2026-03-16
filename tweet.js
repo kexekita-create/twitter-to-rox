@@ -54,7 +54,14 @@ async function main() {
   articles.each((i, el) => {
     if (tweet) return;
 
-    tweetId = $(el).attr("data-testid") || "";
+    // ★ tweetId を正しく取得（ここだけ修正）
+    const link = $(el).find("a[href*='/status/']").attr("href");
+    if (link) {
+      const match = link.match(/status\/(\d+)/);
+      if (match) {
+        tweetId = match[1];
+      }
+    }
 
     const text =
       $(el).find("div[data-testid='tweetText']").text().trim() ||
@@ -70,24 +77,4 @@ async function main() {
   console.log("DEBUG tweet:", tweet);
 
   if (!tweet || !tweetId) {
-    console.log("No tweet found.");
-    return;
-  }
-
-  let lastId = "";
-  if (fs.existsSync(LAST_ID_FILE)) {
-    lastId = fs.readFileSync(LAST_ID_FILE, "utf8").trim();
-  }
-
-  if (tweetId !== lastId) {
-    const message = `**${username} の最新投稿**\n${tweet}\nhttps://x.com/${username}`;
-    await postToDiscord(message);
-    console.log("Posted to Discord.");
-
-    fs.writeFileSync(LAST_ID_FILE, tweetId);
-  } else {
-    console.log("No new tweet.");
-  }
-}
-
-main();
+    console.log

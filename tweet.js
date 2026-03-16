@@ -41,7 +41,7 @@ function postToDiscord(message) {
 }
 
 async function main() {
-  const nitter = `https://nitter.cz/${username}`;
+  const nitter = `https://nitter.poast.org/ragnarokx_jp`;
   const html = await fetchHTML(nitter);
   const $ = cheerio.load(html);
 

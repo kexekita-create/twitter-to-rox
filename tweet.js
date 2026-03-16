@@ -45,7 +45,7 @@ function postToDiscord(message) {
 }
 
 async function main() {
-  const nitter = `https://nitter.poast.org/${username}`;
+  const nitter = `https://nitter.cz/${username}`;
   const html = await fetchHTML(nitter);
 
   console.log("HTML length:", html.length);

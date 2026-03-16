@@ -1,36 +1,26 @@
 const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
-const https = require("https");
 const fs = require("fs");
 
 const username = process.env.TWITTER_USER;
 const webhook = process.env.DISCORD_WEBHOOK;
 const LAST_ID_FILE = "last_id.txt";
 
-function postToDiscord(message) {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify({ content: message });
-
-    const url = new URL(webhook);
-    const options = {
-      hostname: url.hostname,
-      path: url.pathname + url.search,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Content-Length": data.length,
-      },
-    };
-
-    const req = https.request(options, (res) => {
-      res.on("data", () => {});
-      res.on("end", resolve);
-    });
-
-    req.on("error", reject);
-    req.write(data);
-    req.end();
+// Discord のレスポンスを必ず表示する版
+async function postToDiscord(message) {
+  const res = await fetch(webhook, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: message }),
   });
+
+  const text = await res.text();
+  console.log("Discord status:", res.status);
+  console.log("Discord response:", text);
+
+  if (!res.ok) {
+    throw new Error("Discord error: " + res.status);
+  }
 }
 
 async function main() {

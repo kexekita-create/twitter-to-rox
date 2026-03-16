@@ -48,7 +48,7 @@ jobs:
       - name: Run script
         env:
           TWITTER_USER: ${{ secrets.TWITTER_USER }}
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          DISCORD_WEBHOOK: "https://discord.com/api/webhooks/1483096189686648925/WrvypHd7LwhmcD-aEdVSeHYz8vhyhn7cdgiXJJg9suejenh6vNXvxVjxp7bsvB3LZPNv"
         run: |
           echo "WEBHOOK_PREFIX=${DISCORD_WEBHOOK:0:20}"
           node tweet.js

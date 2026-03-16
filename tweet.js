@@ -64,7 +64,6 @@ async function main() {
   articles.each((i, el) => {
     if (tweet) return;
 
-    // ツイートIDを取得（X の article は data-testid="tweet" を持つ）
     tweetId = $(el).attr("data-testid") || "";
 
     const text =
@@ -77,24 +76,24 @@ async function main() {
     }
   });
 
+  console.log("DEBUG tweetId:", tweetId);
+  console.log("DEBUG tweet:", tweet);
+
   if (!tweet || !tweetId) {
     console.log("No tweet found.");
     return;
   }
 
-  // 前回のIDを読み込み
   let lastId = "";
   if (fs.existsSync(LAST_ID_FILE)) {
     lastId = fs.readFileSync(LAST_ID_FILE, "utf8").trim();
   }
 
-  // 初回 or 新着ツイートなら送信
   if (tweetId !== lastId) {
     const message = `**${username} の最新投稿**\n${tweet}\nhttps://x.com/${username}`;
     await postToDiscord(message);
     console.log("Posted to Discord.");
 
-    // IDを保存
     fs.writeFileSync(LAST_ID_FILE, tweetId);
   } else {
     console.log("No new tweet.");

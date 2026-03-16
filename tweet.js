@@ -1,9 +1,11 @@
 const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
 const https = require("https");
+const fs = require("fs");
 
 const username = process.env.TWITTER_USER;
 const webhook = process.env.DISCORD_WEBHOOK;
+const LAST_ID_FILE = "last_id.txt";
 
 function postToDiscord(message) {
   return new Promise((resolve, reject) => {
@@ -47,7 +49,6 @@ async function main() {
 
   await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
 
-  // ツイートが描画されるまで待つ
   await page.waitForSelector("article", { timeout: 60000 });
 
   const html = await page.content();
@@ -55,12 +56,16 @@ async function main() {
 
   const $ = cheerio.load(html);
 
-  // ★ 最新ツイートを確実に拾うロジック（複数パターン対応）
   let tweet = "";
+  let tweetId = "";
+
   const articles = $("article");
 
   articles.each((i, el) => {
     if (tweet) return;
+
+    // ツイートIDを取得（X の article は data-testid="tweet" を持つ）
+    tweetId = $(el).attr("data-testid") || "";
 
     const text =
       $(el).find("div[data-testid='tweetText']").text().trim() ||
@@ -72,15 +77,28 @@ async function main() {
     }
   });
 
-  if (!tweet) {
+  if (!tweet || !tweetId) {
     console.log("No tweet found.");
     return;
   }
 
-  const message = `**${username} の最新投稿**\n${tweet}\nhttps://x.com/${username}`;
-  await postToDiscord(message);
+  // 前回のIDを読み込み
+  let lastId = "";
+  if (fs.existsSync(LAST_ID_FILE)) {
+    lastId = fs.readFileSync(LAST_ID_FILE, "utf8").trim();
+  }
 
-  console.log("Posted to Discord.");
+  // 初回 or 新着ツイートなら送信
+  if (tweetId !== lastId) {
+    const message = `**${username} の最新投稿**\n${tweet}\nhttps://x.com/${username}`;
+    await postToDiscord(message);
+    console.log("Posted to Discord.");
+
+    // IDを保存
+    fs.writeFileSync(LAST_ID_FILE, tweetId);
+  } else {
+    console.log("No new tweet.");
+  }
 }
 
 main();

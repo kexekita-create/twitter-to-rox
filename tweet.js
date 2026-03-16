@@ -49,6 +49,8 @@ async function main() {
   const html = await fetchHTML(nitter);
 
   console.log("HTML length:", html.length);
+  console.log(html.slice(0, 500));
+
 
   const $ = cheerio.load(html);
 

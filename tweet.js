@@ -51,7 +51,7 @@ async function main() {
   const $ = cheerio.load(html);
 
   // ★ 2026年 Nitter の構造に合わせたセレクタ
-  const tweet = $("div.timeline-item div.tweet-content").first().text().trim();
+  const tweet = $("div.timeline-item p.tweet-text").first().text().trim();
   const link = `https://x.com/${username}`;
 
   console.log("HTML length:", html.length);

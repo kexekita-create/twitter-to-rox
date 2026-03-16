@@ -1,6 +1,7 @@
 const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
 const fs = require("fs");
+const { execSync } = require("child_process");
 
 const username = process.env.TWITTER_USER;
 const webhook = process.env.DISCORD_WEBHOOK;
@@ -20,6 +21,20 @@ async function postToDiscord(message) {
 
   if (!res.ok) {
     throw new Error("Discord error: " + res.status);
+  }
+}
+
+// GitHub に last_id.txt を保存する
+function saveToGitHub() {
+  try {
+    execSync("git config user.name 'github-actions[bot]'");
+    execSync("git config user.email 'github-actions[bot]@users.noreply.github.com'");
+    execSync("git add last_id.txt");
+    execSync("git commit -m 'update last tweet id' || echo 'no changes'");
+    execSync("git push");
+    console.log("Pushed last_id.txt to GitHub.");
+  } catch (e) {
+    console.error("Git push failed:", e.message);
   }
 }
 
@@ -54,7 +69,7 @@ async function main() {
   articles.each((i, el) => {
     if (tweet) return;
 
-    // tweetId を正しく取得
+    // ★ tweetId を正しく取得（ここだけ修正）
     const link = $(el).find("a[href*='/status/']").attr("href");
     if (link) {
       const match = link.match(/status\/(\d+)/);
@@ -93,6 +108,9 @@ async function main() {
 
     fs.writeFileSync(LAST_ID_FILE, tweetId);
     console.log("Saved last_id.txt:", tweetId);
+
+    // ★ GitHub に保存
+    saveToGitHub();
   } else {
     console.log("No new tweet.");
   }

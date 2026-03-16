@@ -49,4 +49,6 @@ jobs:
         env:
           TWITTER_USER: ${{ secrets.TWITTER_USER }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          run: echo "WEBHOOK_PREFIX=${DISCORD_WEBHOOK:0:20}"
+
         run: node tweet.js

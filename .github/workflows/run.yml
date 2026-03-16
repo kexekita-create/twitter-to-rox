@@ -8,13 +8,45 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
         with:
-          node-version: 24
-      - run: npm install cheerio
-      - run: node tweet.js
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          npm install puppeteer
+          npm install cheerio
+
+      - name: Install Chromium dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 \
+            libatk1.0-0 \
+            libatk-bridge2.0-0 \
+            libcups2 \
+            libdrm2 \
+            libxkbcommon0 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxfixes3 \
+            libxrandr2 \
+            libgbm1 \
+            libasound2 \
+            libpangocairo-1.0-0 \
+            libpango-1.0-0 \
+            libcairo2 \
+            libatspi2.0-0 \
+            libgtk-3-0
+
+      - name: Run script
         env:
           TWITTER_USER: ${{ secrets.TWITTER_USER }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: node tweet.js

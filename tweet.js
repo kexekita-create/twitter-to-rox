@@ -1,22 +1,9 @@
-const https = require("https");
+const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
+const https = require("https");
 
 const username = process.env.TWITTER_USER;
 const webhook = process.env.DISCORD_WEBHOOK;
-
-function fetchHTML(url) {
-  return new Promise((resolve, reject) => {
-    https.get(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-      }
-    }, (res) => {
-      let data = "";
-      res.on("data", (chunk) => (data += chunk));
-      res.on("end", () => resolve(data));
-    }).on("error", reject);
-  });
-}
 
 function postToDiscord(message) {
   return new Promise((resolve, reject) => {
@@ -45,29 +32,38 @@ function postToDiscord(message) {
 }
 
 async function main() {
-  const nitter = `https://nitter.cz/${username}`;
-  const html = await fetchHTML(nitter);
+  const url = `https://x.com/${username}`;
 
-  console.log("HTML length:", html.length);
-  console.log(html.slice(0, 500));
+  const browser = await puppeteer.launch({
+    headless: "new",
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
 
+  const page = await browser.newPage();
+
+  await page.setUserAgent(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36"
+  );
+
+  await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
+
+  // X は JS で描画されるので、ツイート本文が出るまで待つ
+  await page.waitForSelector("article", { timeout: 60000 });
+
+  const html = await page.content();
+  await browser.close();
 
   const $ = cheerio.load(html);
 
-  // ★ 2026年 Nitter の構造に合わせた3段階フォールバック
-  let tweet =
-    $("div.timeline-item div.tweet-text p").first().text().trim() ||   // 最も新しい構造
-    $("div.timeline-item .tweet-text").first().text().trim() ||        // 旧構造
-    $("div.timeline-item .tweet-content").first().text().trim();       // さらに旧構造
-
-  const link = `https://x.com/${username}`;
+  // X の最新ツイート本文を取得
+  const tweet = $("article div[data-testid='tweetText']").first().text().trim();
 
   if (!tweet) {
     console.log("No tweet found.");
     return;
   }
 
-  const message = `**${username} の最新投稿**\n${tweet}\n${link}`;
+  const message = `**${username} の最新投稿**\n${tweet}\nhttps://x.com/${username}`;
   await postToDiscord(message);
 
   console.log("Posted to Discord.");

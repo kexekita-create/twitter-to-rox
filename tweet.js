@@ -41,11 +41,12 @@ function postToDiscord(message) {
 }
 
 async function main() {
-  const nitter = `https://nitter.net/${username}`;
+  const nitter = `https://nitter.poast.org/${username}`;
   const html = await fetchHTML(nitter);
   const $ = cheerio.load(html);
 
-  const tweet = $(".timeline-item .tweet-content").first().text().trim();
+  // ★ 2026年 Nitter の構造に合わせたセレクタ
+  const tweet = $("div.timeline-item div.tweet-content").first().text().trim();
   const link = `https://x.com/${username}`;
 
   if (!tweet) {

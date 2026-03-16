@@ -18,7 +18,6 @@ function fetchHTML(url) {
   });
 }
 
-
 function postToDiscord(message) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify({ content: message });
@@ -46,15 +45,20 @@ function postToDiscord(message) {
 }
 
 async function main() {
-  const nitter = `https://nitter.poast.org/ragnarokx_jp`;
+  const nitter = `https://nitter.poast.org/${username}`;
   const html = await fetchHTML(nitter);
-  const $ = cheerio.load(html);
-
-  // ★ 2026年 Nitter の構造に合わせたセレクタ
-  const tweet = $("div.timeline-item p.tweet-text").first().text().trim();
-  const link = `https://x.com/${username}`;
 
   console.log("HTML length:", html.length);
+
+  const $ = cheerio.load(html);
+
+  // ★ 2026年 Nitter の構造に合わせた3段階フォールバック
+  let tweet =
+    $("div.timeline-item div.tweet-text p").first().text().trim() ||   // 最も新しい構造
+    $("div.timeline-item .tweet-text").first().text().trim() ||        // 旧構造
+    $("div.timeline-item .tweet-content").first().text().trim();       // さらに旧構造
+
+  const link = `https://x.com/${username}`;
 
   if (!tweet) {
     console.log("No tweet found.");

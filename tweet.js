@@ -41,13 +41,15 @@ function postToDiscord(message) {
 }
 
 async function main() {
-  const nitter = `https://nitter.poast.org/${username}`;
+  const nitter = `https://nitter.cz/${username}`;
   const html = await fetchHTML(nitter);
   const $ = cheerio.load(html);
 
   // ★ 2026年 Nitter の構造に合わせたセレクタ
   const tweet = $("div.timeline-item div.tweet-content").first().text().trim();
   const link = `https://x.com/${username}`;
+
+  console.log("HTML length:", html.length);
 
   if (!tweet) {
     console.log("No tweet found.");

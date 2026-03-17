@@ -7,7 +7,6 @@ const username = process.env.TWITTER_USER;
 const webhook = process.env.DISCORD_WEBHOOK;
 const LAST_ID_FILE = "last_id.txt";
 
-// Discord のレスポンスを必ず表示する版
 async function postToDiscord(message) {
   const res = await fetch(webhook, {
     method: "POST",
@@ -24,7 +23,6 @@ async function postToDiscord(message) {
   }
 }
 
-// GitHub に last_id.txt を保存する
 function saveToGitHub() {
   try {
     execSync("git config user.name 'github-actions[bot]'");
@@ -53,7 +51,6 @@ async function main() {
   );
 
   await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
-
   await page.waitForSelector("article", { timeout: 60000 });
 
   const html = await page.content();
@@ -69,7 +66,14 @@ async function main() {
   articles.each((i, el) => {
     if (tweet) return;
 
-    // ★ tweetId を正しく取得（ここだけ修正）
+    // ★ 固定リプ（Pinned）を除外
+    const isPinned = $(el).find("div[data-testid='socialContext']").text().includes("Pinned");
+    if (isPinned) {
+      console.log("Skip pinned tweet");
+      return;
+    }
+
+    // ★ tweetId を取得
     const link = $(el).find("a[href*='/status/']").attr("href");
     if (link) {
       const match = link.match(/status\/(\d+)/);
@@ -78,6 +82,7 @@ async function main() {
       }
     }
 
+    // ★ 本文を取得
     const text =
       $(el).find("div[data-testid='tweetText']").text().trim() ||
       $(el).find("div[lang]").text().trim() ||
@@ -109,7 +114,6 @@ async function main() {
     fs.writeFileSync(LAST_ID_FILE, tweetId);
     console.log("Saved last_id.txt:", tweetId);
 
-    // ★ GitHub に保存
     saveToGitHub();
   } else {
     console.log("No new tweet.");

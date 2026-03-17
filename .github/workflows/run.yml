@@ -1,9 +1,11 @@
 name: Tweet to Discord
 
 on:
-  schedule:
-    - cron: "*/20 * * * *"
   workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"
+    - cron: "20 * * * *"
+    - cron: "40 * * * *"
 
 permissions:
   contents: write   # ← これが絶対に必要！！！

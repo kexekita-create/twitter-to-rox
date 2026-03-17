@@ -2,7 +2,7 @@ name: Tweet to Discord
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/20 * * * *"
   workflow_dispatch:
 
 permissions:

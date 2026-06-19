@@ -85,6 +85,14 @@
     font-size: 12px;
     display: none;
   }
+  #loadArea {
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 6px;
+    width: 350px;
+    border: 1px solid #444;
+    margin-bottom: 15px;
+  }
 </style>
 </head>
 
@@ -94,6 +102,13 @@
 
 <button id="saveBtn">保存</button>
 <div id="status"></div>
+
+<!-- ▼ 読み込み UI -->
+<div id="loadArea">
+  <label>保存データを読み込む：</label><br>
+  <select id="loadSelect" style="margin-top:5px; width:200px;"></select>
+  <button id="loadBtn">読み込み</button>
+</div>
 
 <div id="headerArea">
   <label>日付を選択：</label>
@@ -114,14 +129,16 @@
 
 <script>
 $(function () {
+
+  /* ▼ 職業一覧 */
   const jobs = [
     "ルーンナイト","3ロイヤルガード","ウォーロック","ソーサラー","アークビショップ",
     "修羅","レンジャー","ミンストレル","ワンダラー","ギロチンクロス",
     "シャドウチェイサー","ジェネティック","メカニック","ハイパーノービス"
   ];
 
+  /* ▼ 100行生成 */
   const $tbody = $("#memberTable tbody");
-
   for (let i = 1; i <= 100; i++) {
     const $tr = $("<tr></tr>");
     $tr.append($("<td></td>").text(i));
@@ -141,62 +158,3 @@ $(function () {
     $tbody.append($tr);
   }
 
-  function showStatus(msg, isError) {
-    const $s = $("#status");
-    $s.text(msg)
-      .css("background", isError ? "#a33" : "#2a2a2a")
-      .fadeIn(150);
-    setTimeout(() => $s.fadeOut(300), 3000);
-  }
-
-  async function saveToGitHub(data) {
-    const owner = "kexekita-create";   // ←自分のGitHubユーザー名
-    const repo  = "twitter-to-rox";       // ←リポジトリ名
-
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        title: "save-members-" + new Date().toISOString(),
-        body: JSON.stringify(data)
-      })
-    });
-
-    if (!res.ok) {
-      throw new Error("GitHub API error: " + res.status);
-    }
-  }
-
-  $("#saveBtn").on("click", async function () {
-    const data = {
-      date: $("#eventDate").val(),
-      members: []
-    };
-
-    $("#memberTable tbody tr").each(function () {
-      const row = {
-        no: $(this).find("td:eq(0)").text(),
-        name: $(this).find("input").val(),
-        job: $(this).find("select[name^='job']").val(),
-        join: $(this).find("select[name^='join']").val()
-      };
-      data.members.push(row);
-    });
-
-    showStatus("GitHubに送信中...", false);
-
-    try {
-      await saveToGitHub(data);
-      showStatus("保存リクエスト送信完了（Actionsで反映されます）", false);
-    } catch (e) {
-      console.error(e);
-      showStatus("保存に失敗しました: " + e.message, true);
-    }
-  });
-});
-</script>
-
-</body>
-</html>

@@ -213,8 +213,8 @@ $(function () {
 
   /* ▼ 保存済みファイル一覧を取得（読み込み用） */
   async function loadFileList() {
-    const owner = "USERNAME";
-    const repo  = "REPO";
+    const owner = "kexekita-create";
+    const repo  = "twitter-to-rox";
 
     const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/data`);
     if (!res.ok) return;

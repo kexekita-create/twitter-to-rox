@@ -1,134 +1,202 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>スーパーノービス実装記念 & 1.5周年企画 コモドビーチでホールインワン</title>
-  <style>
-    body {
-      font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #e8f4ff;
-      color: #03396c;
-    }
+<meta charset="UTF-8">
+<title>参加者一覧</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    header {
-      background: linear-gradient(135deg, #1e90ff, #005fbd);
-      color: white;
-      padding: 45px 20px;
-      text-align: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 2.2rem;
-      line-height: 1.4;
-      font-weight: 700;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 30px auto;
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    h2 {
-      border-left: 6px solid #1e90ff;
-      padding-left: 10px;
-      margin-top: 40px;
-      font-size: 1.4rem;
-      color: #005fbd;
-    }
-
-    .rule-box {
-      background: #f0f8ff;
-      padding: 15px;
-      border-radius: 8px;
-      border: 1px solid #bcdcff;
-      margin-bottom: 20px;
-    }
-
-    .image-box {
-      text-align: center;
-      margin: 20px 0;
-    }
-
-    .image-box img {
-      max-width: 100%;
-      border-radius: 10px;
-      border: 1px solid #cce6ff;
-    }
-
-    .prize-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .prize-list li {
-      background: #e6f2ff;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 8px;
-      border-left: 6px solid #1e90ff;
-      font-size: 1.1rem;
-      color: #03396c;
-    }
-
-    footer {
-      margin-top: 40px;
-      text-align: center;
-      padding: 20px;
-      color: #03396c;
-    }
-
-    .banner {
-      width: 100%;
-      max-width: 900px;
-      border-radius: 10px;
-      border: 1px solid #99ccff;
-    }
-  </style>
+<style>
+  body {
+    font-family: "Segoe UI", sans-serif;
+    background: #1e1e1e;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 20px;
+  }
+  h2 {
+    margin-bottom: 10px;
+    color: #fff;
+  }
+  #headerArea {
+    background: #2a2a2a;
+    padding: 12px;
+    border-radius: 6px;
+    width: 320px;
+    margin-bottom: 15px;
+    border: 1px solid #444;
+  }
+  input[type="date"] {
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    padding: 6px;
+    border-radius: 4px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  th {
+    background: #333;
+    padding: 8px;
+    border-bottom: 2px solid #555;
+  }
+  td {
+    padding: 6px;
+    border-bottom: 1px solid #444;
+  }
+  input[type="text"], select {
+    width: 100%;
+    padding: 5px;
+    background: #2a2a2a;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 4px;
+  }
+  tr:hover {
+    background: #2f2f2f;
+    transition: 0.2s;
+  }
+  #saveBtn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #0078ff;
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 0 10px #000;
+  }
+  #saveBtn:hover {
+    background: #3399ff;
+  }
+  #status {
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    background: #2a2a2a;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: none;
+  }
+</style>
 </head>
+
 <body>
 
-<header>
-  <h1>スーパーノービス実装記念<br>1.5周年企画<br>コモドビーチでホールインワン</h1>
-</header>
+<h2>参加者一覧（1～100）</h2>
 
-<div class="container">
+<button id="saveBtn">保存</button>
+<div id="status"></div>
 
-  <h2>■ ルール説明</h2>
-  <div class="rule-box">
-    ※ここにルール説明を記載します（あとで編集）
-  </div>
-
-  <h2>■ 説明用画像</h2>
-  <div class="image-box">
-    <img src="" alt="説明画像（後で差し替え）">
-  </div>
-
-  <h2>■ 景品一覧</h2>
-  <ul class="prize-list">
-    <li><strong>1位：</strong> イグ実 714個</li>
-    <li><strong>2位：</strong> 濃縮灰ポーション 714個</li>
-    <li><strong>3位：</strong> 濃縮紫ポーション 714個</li>
-  </ul>
-
-  <h2>■ バナー画像</h2>
-  <div class="image-box">
-    <img class="banner" src="" alt="イベント.png">
-  </div>
-
+<div id="headerArea">
+  <label>日付を選択：</label>
+  <input type="date" id="eventDate">
 </div>
 
-<footer>
-  © コモドビーチでホールインワン イベント
-</footer>
+<table id="memberTable">
+  <thead>
+    <tr>
+      <th>No</th>
+      <th>名前</th>
+      <th>職業</th>
+      <th>参加（可/否）</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+$(function () {
+  const jobs = [
+    "ルーンナイト","3ロイヤルガード","ウォーロック","ソーサラー","アークビショップ",
+    "修羅","レンジャー","ミンストレル","ワンダラー","ギロチンクロス",
+    "シャドウチェイサー","ジェネティック","メカニック","ハイパーノービス"
+  ];
+
+  const $tbody = $("#memberTable tbody");
+
+  for (let i = 1; i <= 100; i++) {
+    const $tr = $("<tr></tr>");
+    $tr.append($("<td></td>").text(i));
+
+    const $name = $("<input>").attr("type", "text").attr("name", "name_" + i);
+    $tr.append($("<td></td>").append($name));
+
+    const $job = $("<select></select>").attr("name", "job_" + i);
+    jobs.forEach(j => $job.append($("<option></option>").val(j).text(j)));
+    $tr.append($("<td></td>").append($job));
+
+    const $join = $("<select></select>").attr("name", "join_" + i);
+    $join.append("<option value='可'>可</option>");
+    $join.append("<option value='否'>否</option>");
+    $tr.append($("<td></td>").append($join));
+
+    $tbody.append($tr);
+  }
+
+  function showStatus(msg, isError) {
+    const $s = $("#status");
+    $s.text(msg)
+      .css("background", isError ? "#a33" : "#2a2a2a")
+      .fadeIn(150);
+    setTimeout(() => $s.fadeOut(300), 3000);
+  }
+
+  async function saveToGitHub(data) {
+    const owner = "kexekita-create";   // ←自分のGitHubユーザー名
+    const repo  = "twitter-to-rox";       // ←リポジトリ名
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title: "save-members-" + new Date().toISOString(),
+        body: JSON.stringify(data)
+      })
+    });
+
+    if (!res.ok) {
+      throw new Error("GitHub API error: " + res.status);
+    }
+  }
+
+  $("#saveBtn").on("click", async function () {
+    const data = {
+      date: $("#eventDate").val(),
+      members: []
+    };
+
+    $("#memberTable tbody tr").each(function () {
+      const row = {
+        no: $(this).find("td:eq(0)").text(),
+        name: $(this).find("input").val(),
+        job: $(this).find("select[name^='job']").val(),
+        join: $(this).find("select[name^='join']").val()
+      };
+      data.members.push(row);
+    });
+
+    showStatus("GitHubに送信中...", false);
+
+    try {
+      await saveToGitHub(data);
+      showStatus("保存リクエスト送信完了（Actionsで反映されます）", false);
+    } catch (e) {
+      console.error(e);
+      showStatus("保存に失敗しました: " + e.message, true);
+    }
+  });
+});
+</script>
 
 </body>
 </html>

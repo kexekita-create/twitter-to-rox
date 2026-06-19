@@ -158,3 +158,107 @@ $(function () {
     $tbody.append($tr);
   }
 
+  /* ▼ ステータス表示 */
+  function showStatus(msg, isError) {
+    const $s = $("#status");
+    $s.text(msg)
+      .css("background", isError ? "#a33" : "#2a2a2a")
+      .fadeIn(150);
+    setTimeout(() => $s.fadeOut(300), 3000);
+  }
+
+  /* ▼ GitHub Pages → GitHub API（Issue作成）※401になるがUIとして残す */
+  async function saveToGitHub(data) {
+    const owner = "USERNAME";
+    const repo  = "REPO";
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: "save-members-" + new Date().toISOString(),
+        body: JSON.stringify(data)
+      })
+    });
+
+    if (!res.ok) throw new Error("GitHub API error: " + res.status);
+  }
+
+  /* ▼ 保存ボタン */
+  $("#saveBtn").on("click", async function () {
+    const data = {
+      date: $("#eventDate").val(),
+      members: []
+    };
+
+    $("#memberTable tbody tr").each(function () {
+      const row = {
+        no: $(this).find("td:eq(0)").text(),
+        name: $(this).find("input").val(),
+        job: $(this).find("select[name^='job']").val(),
+        join: $(this).find("select[name^='join']").val()
+      };
+      data.members.push(row);
+    });
+
+    showStatus("GitHubに送信中...", false);
+
+    try {
+      await saveToGitHub(data);
+      showStatus("保存リクエスト送信完了", false);
+    } catch (e) {
+      showStatus("保存に失敗しました: " + e.message, true);
+    }
+  });
+
+  /* ▼ 保存済みファイル一覧を取得（読み込み用） */
+  async function loadFileList() {
+    const owner = "USERNAME";
+    const repo  = "REPO";
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/data`);
+    if (!res.ok) return;
+
+    const files = await res.json();
+    const list = files
+      .filter(f => f.name.startsWith("members-") && f.name.endsWith(".json"))
+      .map(f => f.name)
+      .sort();
+
+    const $sel = $("#loadSelect");
+    $sel.empty();
+    list.forEach(name => {
+      $sel.append(`<option value="${name}">${name}</option>`);
+    });
+  }
+
+  /* ▼ 選択したファイルを読み込む */
+  async function loadSelectedFile() {
+    const owner = "USERNAME";
+    const repo  = "REPO";
+    const file = $("#loadSelect").val();
+
+    const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/data/${file}`);
+    const json = await res.json();
+
+    $("#eventDate").val(json.date);
+
+    json.members.forEach((m, i) => {
+      const row = $("#memberTable tbody tr").eq(i);
+      row.find("input").val(m.name);
+      row.find("select[name^='job']").val(m.job);
+      row.find("select[name^='join']").val(m.join);
+    });
+
+    showStatus("読み込み完了", false);
+  }
+
+  /* ▼ 初期化 */
+  loadFileList();
+  $("#loadBtn").on("click", loadSelectedFile);
+
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,51 @@
+name: Save Members JSON
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  save:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Prepare
+        run: mkdir -p data
+
+      - name: Extract JSON from issue
+        id: extract
+        run: |
+          echo '${{ github.event.issue.body }}' > tmp.json
+          DATE=$(jq -r '.date' tmp.json)
+          echo "date=$DATE" >> $GITHUB_OUTPUT
+
+      - name: Determine next version
+        id: version
+        run: |
+          DATE=${{ steps.extract.outputs.date }}
+          FILES=$(ls data/members-${DATE}-v*.json 2>/dev/null | wc -l)
+          NEXT=$(printf "%03d" $((FILES + 1)))
+          echo "version=$NEXT" >> $GITHUB_OUTPUT
+
+      - name: Save JSON
+        run: |
+          DATE=${{ steps.extract.outputs.date }}
+          VER=${{ steps.version.outputs.version }}
+          cp tmp.json data/members-${DATE}-v${VER}.json
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git commit -m "Save members ${DATE} v${VER}" || echo "No changes"
+          git push
+
+      - name: Close issue
+        uses: actions-ecosystem/action-close-issue@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          comment: "保存完了しました。"

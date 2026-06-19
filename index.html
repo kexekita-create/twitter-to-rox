@@ -103,7 +103,6 @@
 <button id="saveBtn">保存</button>
 <div id="status"></div>
 
-<!-- ▼ 読み込み UI -->
 <div id="loadArea">
   <label>保存データを読み込む：</label><br>
   <select id="loadSelect" style="margin-top:5px; width:200px;"></select>
@@ -130,14 +129,12 @@
 <script>
 $(function () {
 
-  /* ▼ 職業一覧 */
   const jobs = [
     "ルーンナイト","3ロイヤルガード","ウォーロック","ソーサラー","アークビショップ",
     "修羅","レンジャー","ミンストレル","ワンダラー","ギロチンクロス",
     "シャドウチェイサー","ジェネティック","メカニック","ハイパーノービス"
   ];
 
-  /* ▼ 100行生成 */
   const $tbody = $("#memberTable tbody");
   for (let i = 1; i <= 100; i++) {
     const $tr = $("<tr></tr>");
@@ -158,7 +155,6 @@ $(function () {
     $tbody.append($tr);
   }
 
-  /* ▼ ステータス表示 */
   function showStatus(msg, isError) {
     const $s = $("#status");
     $s.text(msg)
@@ -180,7 +176,6 @@ $(function () {
     }
   }
 
-  /* ▼ 保存ボタン */
   $("#saveBtn").on("click", async function () {
     const data = {
       date: $("#eventDate").val(),
@@ -207,7 +202,6 @@ $(function () {
     }
   });
 
-  /* ▼ 保存済みファイル一覧を取得（読み込み用） */
   async function loadFileList() {
     const owner = "kexekita-create";
     const repo  = "twitter-to-rox";
@@ -228,7 +222,6 @@ $(function () {
     });
   }
 
-  /* ▼ 選択したファイルを読み込む */
   async function loadSelectedFile() {
     const owner = "kexekita-create";
     const repo  = "twitter-to-rox";
@@ -249,7 +242,6 @@ $(function () {
     showStatus("読み込み完了", false);
   }
 
-  /* ▼ 初期化 */
   loadFileList();
   $("#loadBtn").on("click", loadSelectedFile);
 

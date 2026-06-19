@@ -167,21 +167,17 @@ $(function () {
     setTimeout(() => $s.fadeOut(300), 3000);
   }
 
-  /* ▼ GitHub Pages → GitHub API（Issue作成）※401になるがUIとして残す */
+  /* ▼ Cloudflare Worker に送る保存処理（修正版） */
   async function saveToGitHub(data) {
-    const owner = "USERNAME";
-    const repo  = "REPO";
-
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
+    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: "save-members-" + new Date().toISOString(),
-        body: JSON.stringify(data)
-      })
+      body: JSON.stringify(data)
     });
 
-    if (!res.ok) throw new Error("GitHub API error: " + res.status);
+    if (!res.ok) {
+      throw new Error("Worker error: " + res.status);
+    }
   }
 
   /* ▼ 保存ボタン */
@@ -201,11 +197,11 @@ $(function () {
       data.members.push(row);
     });
 
-    showStatus("GitHubに送信中...", false);
+    showStatus("Worker に送信中...", false);
 
     try {
       await saveToGitHub(data);
-      showStatus("保存リクエスト送信完了", false);
+      showStatus("保存完了（Worker → GitHub）", false);
     } catch (e) {
       showStatus("保存に失敗しました: " + e.message, true);
     }
@@ -234,8 +230,8 @@ $(function () {
 
   /* ▼ 選択したファイルを読み込む */
   async function loadSelectedFile() {
-    const owner = "USERNAME";
-    const repo  = "REPO";
+    const owner = "kexekita-create";
+    const repo  = "twitter-to-rox";
     const file = $("#loadSelect").val();
 
     const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/data/${file}`);

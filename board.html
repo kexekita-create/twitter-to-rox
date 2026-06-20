@@ -17,40 +17,42 @@
     overflow-y: auto;
   }
 
-  h2 { margin-bottom: 10px; font-size: 20px; }
+  h2 { margin-bottom: 10px; font-size: 22px; }
 
   #loadArea {
     margin-bottom: 10px;
     background: #2a2a2a;
-    padding: 10px;
+    padding: 12px;
     border-radius: 6px;
     width: 100%;
-    max-width: 480px;
+    max-width: 520px;
     border: 1px solid #444;
+    font-size: 16px;
   }
 
   #saveBtn, #sortBtn, #loadBtn, #formationLoadBtn {
     background: #0078ff;
     color: white;
-    padding: 6px 12px;
+    padding: 8px 14px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
     margin-top: 8px;
     margin-right: 8px;
-    font-size: 14px;
+    font-size: 15px;
   }
 
   #status {
     margin-top: 10px;
     background: #2a2a2a;
-    padding: 6px 10px;
+    padding: 8px 12px;
     border-radius: 4px;
     display: none;
+    font-size: 15px;
   }
 
-  /* 未配属（6列グリッド） */
+  /* ▼ 未配属（6列グリッド） */
   #unassigned {
     background: #2a2a2a;
     border: 2px solid #555;
@@ -60,19 +62,19 @@
 
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 4px;
+    gap: 6px;
 
-    max-height: 300px;
+    max-height: 320px;
     overflow-y: auto;
   }
 
   #unassigned h3 {
     grid-column: span 6;
-    margin: 0 0 4px 0;
-    font-size: 15px;
+    margin: 0 0 6px 0;
+    font-size: 18px;
   }
 
-  /* チーム（3×5の枠を見せる） */
+  /* ▼ チーム（3×5の枠を見せる） */
   .zone {
     background: #2a2a2a;
     border: 2px solid #555;
@@ -82,16 +84,16 @@
 
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    grid-auto-rows: 40px;
-    gap: 4px;
+    grid-auto-rows: 48px;
+    gap: 6px;
 
-    min-height: 150px;
+    min-height: 180px;
   }
 
   .zone h3 {
     grid-column: span 5;
-    margin: 0 0 4px 0;
-    font-size: 15px;
+    margin: 0 0 6px 0;
+    font-size: 18px;
   }
 
   .slot {
@@ -105,7 +107,7 @@
     padding: 4px;
     border-radius: 4px;
     cursor: grab;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: bold;
     text-align: center;
     user-select: none;
@@ -119,7 +121,8 @@
     z-index: 9999;
     pointer-events: none;
     opacity: 0.9;
-    width: 120px;
+    width: 150px;
+    font-size: 16px;
   }
 </style>
 </head>
@@ -130,12 +133,12 @@
 
 <div id="loadArea">
   <label>読み込む JSON：</label><br>
-  <select id="loadSelect" style="margin-top:5px; width:260px;"></select>
+  <select id="loadSelect" style="margin-top:5px; width:260px; font-size:15px;"></select>
   <button id="loadBtn">読み込み</button>
 
   <br><br>
   <label>編成一覧：</label><br>
-  <select id="formationSelect" style="margin-top:5px; width:260px;"></select>
+  <select id="formationSelect" style="margin-top:5px; width:260px; font-size:15px;"></select>
   <button id="formationLoadBtn">編成ロード</button>
 
   <br><br>
@@ -145,67 +148,53 @@
   <div id="status"></div>
 </div>
 
+<!-- ▼ 未配属 -->
 <div id="unassigned">
   <h3>未配属（0）</h3>
 </div>
 
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-  <div class="zone" id="zoneA">
-    <h3>チームA（0）</h3>
-    <!-- 3×5 = 15枠 -->
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-  </div>
-  <div class="zone" id="zoneB">
-    <h3>チームB（0）</h3>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-  </div>
-  <div class="zone" id="zoneC">
-    <h3>チームC（0）</h3>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-  </div>
-  <div class="zone" id="zoneD">
-    <h3>チームD（0）</h3>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-  </div>
-  <div class="zone" id="zoneE">
-    <h3>チームE（0）</h3>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-  </div>
-  <div class="zone" id="zoneF">
-    <h3>チームF（0）</h3>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
-  </div>
+<!-- ▼ チーム 2×3 -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+
+  <!-- 15枠 × 6チーム -->
+  <script>
+    const teamIds = ["A","B","C","D","E","F"];
+    document.write(
+      teamIds.map(id => `
+        <div class="zone" id="zone${id}">
+          <h3>チーム${id}（0）</h3>
+          ${"<div class='slot'></div>".repeat(15)}
+        </div>
+      `).join("")
+    );
+  </script>
+
 </div>
 
 <script>
 $(function () {
 
+  /* ▼ 目に優しいダークテーマ職色 */
   const jobColors = {
     "ルーンナイト": "#b30000",
     "ロイヤルガード": "#ff4d4d",
+
     "ウォーロック": "#0033cc",
     "ソーサラー": "#4d79ff",
-    "アークビショップ": "#cc9900",
-    "修羅": "#ffcc00",
+
+    "アークビショップ": "#4a3f2b", // ダークゴールド
+    "修羅": "#3a2f1d",             // ダークブラウン
+
     "レンジャー": "#006600",
     "ミンストレル": "#33cc33",
     "ワンダラー": "#33cc33",
+
     "ギロチンクロス": "#4d0066",
     "シャドウチェイサー": "#9933cc",
+
     "ジェネティック": "#0099cc",
     "メカニック": "#66d9ff",
+
     "ハイパーノービス": "#ffffff"
   };
 
@@ -217,18 +206,17 @@ $(function () {
 
   const zones = ["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"];
 
+  /* ▼ カウント更新 */
   function updateCounts() {
-    const unassignedCount = $("#unassigned .piece").length;
-    $("#unassigned h3").text(`未配属（${unassignedCount}）`);
+    $("#unassigned h3").text(`未配属（${$("#unassigned .piece").length}）`);
 
     zones.forEach(id => {
       const count = $("#" + id + " .slot .piece").length;
-      $("#" + id + " h3").text(
-        $("#" + id + " h3").text().replace(/\（.*?\）/, `（${count}）`)
-      );
+      $("#" + id + " h3").text(`チーム${id.replace("zone","")}（${count}）`);
     });
   }
 
+  /* ▼ メンバー一覧ロード */
   async function loadFileList() {
     const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
     const files = await res.json();
@@ -238,11 +226,12 @@ $(function () {
       .map(f => f.name)
       .sort();
 
-    const $sel = $("#loadSelect");
-    $sel.empty();
-    list.forEach(name => $sel.append(`<option value="${name}">${name}</option>`));
+    $("#loadSelect").empty().append(
+      list.map(n => `<option value="${n}">${n}</option>`)
+    );
   }
 
+  /* ▼ メンバー読み込み（未配属に全部入れる） */
   async function loadSelectedFile() {
     const file = $("#loadSelect").val();
     const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
@@ -250,23 +239,17 @@ $(function () {
 
     $(".piece").remove();
 
-    const members = json.members.filter(m => m.join === "可");
-
-    members.forEach(m => {
-      const color = jobColors[m.job] || "#888";
-      const $piece = $(`
-        <div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${color}">
-          ${m.name}
-        </div>
-      `);
-      enableDrag($piece);
-      $("#unassigned").append($piece);
+    json.members.filter(m => m.join === "可").forEach(m => {
+      const $p = $(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${jobColors[m.job] || "#888"}">${m.name}</div>`);
+      enableDrag($p);
+      $("#unassigned").append($p);
     });
 
     updateCounts();
     showStatus(file + " を読み込みました");
   }
 
+  /* ▼ 編成一覧ロード */
   async function loadFormationList() {
     const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
     const files = await res.json();
@@ -276,11 +259,12 @@ $(function () {
       .map(f => f.name)
       .sort();
 
-    const $sel = $("#formationSelect");
-    $sel.empty();
-    list.forEach(name => $sel.append(`<option value="${name}">${name}</option>`));
+    $("#formationSelect").empty().append(
+      list.map(n => `<option value="${n}">${n}</option>`)
+    );
   }
 
+  /* ▼ 編成ロード */
   async function loadFormation() {
     const file = $("#formationSelect").val();
     const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
@@ -292,27 +276,18 @@ $(function () {
 
     Object.keys(formation).forEach(zoneId => {
       formation[zoneId].forEach(m => {
-        const color = jobColors[m.job] || "#888";
-        const $piece = $(`
-          <div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${color}">
-            ${m.name}
-          </div>
-        `);
-        enableDrag($piece);
+        const $p = $(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${jobColors[m.job] || "#888"}">${m.name}</div>`);
+        enableDrag($p);
 
         if (zoneId === "unassigned") {
-          $("#unassigned").append($piece);
+          $("#unassigned").append($p);
         } else {
-          const $zone = $("#" + zoneId);
-          const $emptySlot = $zone.find(".slot").filter(function () {
-            return $(this).children(".piece").length === 0;
+          const $slot = $("#" + zoneId).find(".slot").filter(function () {
+            return $(this).children().length === 0;
           }).first();
 
-          if ($emptySlot.length) {
-            $emptySlot.append($piece);
-          } else {
-            $("#unassigned").append($piece);
-          }
+          if ($slot.length) $slot.append($p);
+          else $("#unassigned").append($p);
         }
       });
     });
@@ -321,74 +296,75 @@ $(function () {
     showStatus(file + " を読み込みました");
   }
 
-  function enableDrag($piece) {
+  /* ▼ ドラッグ処理 */
+  function enableDrag($p) {
     let dragging = false;
     let offsetX = 0, offsetY = 0;
 
-    $piece.on("mousedown touchstart", function (e) {
+    $p.on("mousedown touchstart", function (e) {
       e.preventDefault();
       dragging = true;
 
-      const clientX = e.clientX || e.originalEvent.touches[0].clientX;
-      const clientY = e.clientY || e.originalEvent.touches[0].clientY;
+      const x = e.clientX || e.originalEvent.touches[0].clientX;
+      const y = e.clientY || e.originalEvent.touches[0].clientY;
 
       const rect = this.getBoundingClientRect();
-      offsetX = clientX - rect.left;
-      offsetY = clientY - rect.top;
+      offsetX = x - rect.left;
+      offsetY = y - rect.top;
 
-      $piece.addClass("dragging");
-      movePiece($piece, clientX, clientY);
+      $p.addClass("dragging");
+      movePiece($p, x, y);
     });
 
     $(document).on("mousemove touchmove", function (e) {
       if (!dragging) return;
 
-      const clientX = e.clientX || e.originalEvent.touches[0].clientX;
-      const clientY = e.clientY || e.originalEvent.touches[0].clientY;
+      const x = e.clientX || e.originalEvent.touches[0].clientX;
+      const y = e.clientY || e.originalEvent.touches[0].clientY;
 
-      movePiece($piece, clientX, clientY);
+      movePiece($p, x, y);
     });
 
     $(document).on("mouseup touchend", function (e) {
       if (!dragging) return;
       dragging = false;
 
-      const clientX = e.clientX || (e.originalEvent.changedTouches && e.originalEvent.changedTouches[0].clientX);
-      const clientY = e.clientY || (e.originalEvent.changedTouches && e.originalEvent.changedTouches[0].clientY);
+      const x = e.clientX || (e.originalEvent.changedTouches && e.originalEvent.changedTouches[0].clientX);
+      const y = e.clientY || (e.originalEvent.changedTouches && e.originalEvent.changedTouches[0].clientY);
 
-      const target = document.elementFromPoint(clientX, clientY);
-      const $zone = $(target).closest(".zone, #unassigned, .slot");
+      const target = document.elementFromPoint(x, y);
+      const $slot = $(target).closest(".slot");
+      const $zone = $(target).closest(".zone");
+      const $unassigned = $(target).closest("#unassigned");
 
-      $piece.removeClass("dragging");
-      $piece.css({ left: "", top: "" });
+      $p.removeClass("dragging").css({ left: "", top: "" });
 
-      if ($zone.length > 0) {
-        if ($zone.attr("id") === "unassigned") {
-          $("#unassigned").append($piece);
-        } else if ($zone.hasClass("slot")) {
-          const $parentZone = $zone.closest(".zone");
-          const currentCount = $parentZone.find(".slot .piece").length;
+      if ($unassigned.length) {
+        $("#unassigned").append($p);
+      }
+      else if ($slot.length) {
+        const $parentZone = $slot.closest(".zone");
+        const count = $parentZone.find(".slot .piece").length;
 
-          if (currentCount >= 15 && $zone.children(".piece").length === 0) {
-            $("#unassigned").append($piece);
-          } else {
-            if ($zone.children(".piece").length > 0) {
-              const $existing = $zone.children(".piece").first();
-              $("#unassigned").append($existing);
-            }
-            $zone.append($piece);
+        if (count >= 15 && $slot.children().length === 0) {
+          $("#unassigned").append($p);
+        } else {
+          if ($slot.children().length > 0) {
+            $("#unassigned").append($slot.children().first());
           }
-        } else if ($zone.hasClass("zone")) {
-          const $emptySlot = $zone.find(".slot").filter(function () {
-            return $(this).children(".piece").length === 0;
-          }).first();
-
-          if ($emptySlot.length) {
-            $emptySlot.append($piece);
-          } else {
-            $("#unassigned").append($piece);
-          }
+          $slot.append($p);
         }
+      }
+      else if ($zone.length) {
+        const $empty = $zone.find(".slot").filter(function () {
+          return $(this).children().length === 0;
+        }).first();
+
+        if ($empty.length) $empty.append($p);
+        else $("#unassigned").append($p);
+      }
+      else {
+        $("#unassigned").append($p);
       }
 
       updateCounts();
@@ -396,12 +372,12 @@ $(function () {
   }
 
   function movePiece($el, x, y) {
-    $el.css({ left: x - 60 + "px", top: y - 20 + "px" });
+    $el.css({ left: x - 75 + "px", top: y - 24 + "px" });
   }
 
+  /* ▼ 未配属だけ整列 */
   function sortUnassigned() {
-    const $zone = $("#unassigned");
-    const pieces = $zone.children(".piece").get();
+    const pieces = $("#unassigned .piece").get();
 
     pieces.sort((a, b) => {
       const jobA = $(a).data("job");
@@ -409,13 +385,12 @@ $(function () {
       return jobOrder.indexOf(jobA) - jobOrder.indexOf(jobB);
     });
 
-    pieces.forEach(p => $zone.append(p));
+    pieces.forEach(p => $("#unassigned").append(p));
   }
 
-  $("#sortBtn").on("click", function () {
-    sortUnassigned();
-  });
+  $("#sortBtn").on("click", sortUnassigned);
 
+  /* ▼ 保存 */
   async function saveFormation() {
     const formation = { unassigned: [] };
 
@@ -436,16 +411,14 @@ $(function () {
       });
     });
 
-    const payload = {
-      type: "formation",
-      timestamp: new Date().toISOString(),
-      formation
-    };
-
     await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        type: "formation",
+        timestamp: new Date().toISOString(),
+        formation
+      })
     });
 
     showStatus("編成を保存しました");

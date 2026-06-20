@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>配置ボード</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+
+<style>
+  body {
+    background: #1e1e1e;
+    color: #fff;
+    font-family: "Segoe UI", sans-serif;
+    padding: 20px;
+  }
+
+  h2 { margin-bottom: 10px; }
+
+  #loadArea {
+    margin-bottom: 20px;
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 6px;
+    width: 350px;
+    border: 1px solid #444;
+  }
+
+  #board {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .zone {
+    width: 23%;
+    height: 600px;
+    background: #2a2a2a;
+    border: 2px solid #555;
+    border-radius: 6px;
+    padding: 10px;
+    overflow-y: auto;
+  }
+
+  .piece {
+    padding: 6px 10px;
+    margin: 6px 0;
+    border-radius: 4px;
+    cursor: move;
+    font-size: 14px;
+    font-weight: bold;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>配置ボード（参加可のメンバーのみ）</h2>
+
+<div id="loadArea">
+  <label>読み込む JSON：</label><br>
+  <select id="loadSelect" style="margin-top:5px; width:200px;"></select>
+  <button id="loadBtn">読み込み</button>
+</div>
+
+<div id="board">
+  <div class="zone" id="zone1"><h3>エリア1</h3></div>
+  <div class="zone" id="zone2"><h3>エリア2</h3></div>
+  <div class="zone" id="zone3"><h3>エリア3</h3></div>
+  <div class="zone" id="zone4"><h3>エリア4</h3></div>
+</div>
+
+<script>
+$(function () {
+
+  /* ▼ 職業ごとの色（自由に変えてOK） */
+  const jobColors = {
+    "ルーンナイト": "#ff6666",
+    "3ロイヤルガード": "#ff9966",
+    "ウォーロック": "#cc66ff",
+    "ソーサラー": "#9966ff",
+    "アークビショップ": "#66ccff",
+    "修羅": "#ffcc66",
+    "レンジャー": "#66ff99",
+    "ミンストレル": "#66ffff",
+    "ワンダラー": "#99ffcc",
+    "ギロチンクロス": "#ff6699",
+    "シャドウチェイサー": "#ff99cc",
+    "ジェネティック": "#99cc66",
+    "メカニック": "#cccc66",
+    "ハイパーノービス": "#ffffff"
+  };
+
+  /* ▼ GitHub からファイル一覧取得 */
+  async function loadFileList() {
+    const owner = "kexekita-create";
+    const repo  = "twitter-to-rox";
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/data`);
+    if (!res.ok) return;
+
+    const files = await res.json();
+    const list = files
+      .filter(f => f.name.startsWith("members-") && f.name.endsWith(".json"))
+      .map(f => f.name)
+      .sort();
+
+    const $sel = $("#loadSelect");
+    $sel.empty();
+    list.forEach(name => {
+      $sel.append(`<option value="${name}">${name}</option>`);
+    });
+  }
+
+  /* ▼ JSON 読み込み → ピース生成 */
+  async function loadSelectedFile() {
+    const owner = "kexekita-create";
+    const repo  = "twitter-to-rox";
+    const file = $("#loadSelect").val();
+
+    const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/data/${file}`);
+    const json = await res.json();
+
+    // 既存ピース削除
+    $(".zone").find(".piece").remove();
+
+    // 参加可のみ抽出
+    const members = json.members.filter(m => m.join === "可");
+
+    members.forEach(m => {
+      const color = jobColors[m.job] || "#888";
+
+      const $piece = $(`
+        <div class="piece" style="background:${color}">
+          ${m.name}（${m.job}）
+        </div>
+      `);
+
+      // ドラッグ可能にする
+      $piece.draggable({
+        revert: "invalid",
+        containment: "document",
+        scroll: true
+      });
+
+      // 初期配置はエリア1
+      $("#zone1").append($piece);
+    });
+  }
+
+  /* ▼ ドロップ可能設定 */
+  $(".zone").droppable({
+    accept: ".piece",
+    drop: function (event, ui) {
+      $(this).append(ui.draggable);
+    }
+  });
+
+  /* ▼ 初期化 */
+  loadFileList();
+  $("#loadBtn").on("click", loadSelectedFile);
+
+});
+</script>
+
+</body>
+</html>

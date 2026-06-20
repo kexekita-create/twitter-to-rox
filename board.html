@@ -14,7 +14,7 @@
     margin: 0;
     height: 100%;
     overflow-x: hidden;
-    overflow-y: auto; /* ← これが重要（読み込み不具合の原因だった） */
+    overflow-y: auto;
   }
 
   h2 { margin-bottom: 10px; font-size: 20px; }
@@ -50,20 +50,29 @@
     display: none;
   }
 
-  /* ▼ 2×3 グリッド + スクロール */
-  #board {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    grid-auto-rows: minmax(150px, auto);
-    gap: 10px;
-    width: 100%;
-    height: calc(100vh - 220px);
+  /* ▼ 未配属（6列グリッド） */
+  #unassigned {
+    background: #2a2a2a;
+    border: 2px solid #555;
+    border-radius: 6px;
+    padding: 6px;
+    margin-bottom: 15px;
+
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+
+    max-height: 300px;
     overflow-y: auto;
-    overflow-x: hidden;
-    box-sizing: border-box;
-    padding-right: 5px;
   }
 
+  #unassigned h3 {
+    grid-column: span 6;
+    margin: 0 0 4px 0;
+    font-size: 15px;
+  }
+
+  /* ▼ チーム（3×5グリッド） */
   .zone {
     background: #2a2a2a;
     border: 2px solid #555;
@@ -71,28 +80,27 @@
     padding: 6px;
     box-sizing: border-box;
 
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-auto-rows: minmax(40px, auto);
     gap: 4px;
 
-    overflow-y: auto;
-    overflow-x: hidden;
     min-height: 150px;
   }
 
   .zone h3 {
+    grid-column: span 5;
     margin: 0 0 4px 0;
     font-size: 15px;
   }
 
   .piece {
-    padding: 4px 8px;
+    padding: 4px;
     border-radius: 4px;
     cursor: grab;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
-    width: 100%;
-    box-sizing: border-box;
+    text-align: center;
     user-select: none;
   }
 
@@ -101,14 +109,9 @@
     z-index: 9999;
     pointer-events: none;
     opacity: 0.9;
-    width: 180px;
+    width: 120px;
   }
 
-  .placeholder {
-    height: 22px;
-    border: 1px dashed #666;
-    border-radius: 4px;
-  }
 </style>
 </head>
 
@@ -133,7 +136,13 @@
   <div id="status"></div>
 </div>
 
-<div id="board">
+<!-- ▼ 未配属 -->
+<div id="unassigned">
+  <h3>未配属（0）</h3>
+</div>
+
+<!-- ▼ チーム 2×3 -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
   <div class="zone" id="zoneA"><h3>チームA（0）</h3></div>
   <div class="zone" id="zoneB"><h3>チームB（0）</h3></div>
   <div class="zone" id="zoneC"><h3>チームC（0）</h3></div>
@@ -145,28 +154,37 @@
 <script>
 $(function () {
 
-  /* ▼ 指定通りの濃淡カラー */
+  /* ▼ 色設定 */
   const jobColors = {
-    "ルーンナイト":      "#b30000",
-    "ロイヤルガード":    "#ff4d4d",
-    "ウォーロック":      "#0033cc",
-    "ソーサラー":        "#4d79ff",
-    "アークビショップ":  "#cc9900",
-    "修羅":              "#ffcc00",
-    "レンジャー":        "#006600",
-    "ミンストレル":      "#33cc33",
-    "ワンダラー":        "#33cc33",
-    "ギロチンクロス":    "#4d0066",
+    "ルーンナイト": "#b30000",
+    "ロイヤルガード": "#ff4d4d",
+    "ウォーロック": "#0033cc",
+    "ソーサラー": "#4d79ff",
+    "アークビショップ": "#cc9900",
+    "修羅": "#ffcc00",
+    "レンジャー": "#006600",
+    "ミンストレル": "#33cc33",
+    "ワンダラー": "#33cc33",
+    "ギロチンクロス": "#4d0066",
     "シャドウチェイサー": "#9933cc",
-    "ジェネティック":    "#0099cc",
-    "メカニック":        "#66d9ff",
-    "ハイパーノービス":  "#ffffff"
+    "ジェネティック": "#0099cc",
+    "メカニック": "#66d9ff",
+    "ハイパーノービス": "#ffffff"
   };
+
+  const jobOrder = [
+    "ルーンナイト","ロイヤルガード","ウォーロック","ソーサラー","アークビショップ",
+    "修羅","レンジャー","ミンストレル","ワンダラー","ギロチンクロス",
+    "シャドウチェイサー","ジェネティック","メカニック","ハイパーノービス"
+  ];
 
   const zones = ["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"];
 
-  /* ▼ 人数カウント更新 */
+  /* ▼ カウント更新 */
   function updateCounts() {
+    const unassignedCount = $("#unassigned .piece").length;
+    $("#unassigned h3").text(`未配属（${unassignedCount}）`);
+
     zones.forEach(id => {
       const count = $("#" + id + " .piece").length;
       $("#" + id + " h3").text(
@@ -175,100 +193,77 @@ $(function () {
     });
   }
 
-  /* ▼ メンバーJSON一覧 */
+  /* ▼ メンバー一覧ロード */
   async function loadFileList() {
-    const owner = "kexekita-create";
-    const repo  = "twitter-to-rox";
-
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/data`);
-    if (!res.ok) return;
-
+    const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
     const files = await res.json();
+
     const list = files
-      .filter(f => f.name.startsWith("members-") && f.name.endsWith(".json"))
+      .filter(f => f.name.startsWith("members-"))
       .map(f => f.name)
       .sort();
 
     const $sel = $("#loadSelect");
     $sel.empty();
-    list.forEach(name => {
-      $sel.append(`<option value="${name}">${name}</option>`);
-    });
+    list.forEach(name => $sel.append(`<option value="${name}">${name}</option>`));
   }
 
-  /* ▼ メンバー読み込み */
+  /* ▼ メンバー読み込み（未配属に全部入れる） */
   async function loadSelectedFile() {
-    const owner = "kexekita-create";
-    const repo  = "twitter-to-rox";
     const file = $("#loadSelect").val();
-    if (!file) return;
-
-    const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/data/${file}`);
+    const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
     const json = await res.json();
 
-    $(".zone .piece").remove();
+    $(".piece").remove();
 
     const members = json.members.filter(m => m.join === "可");
 
     members.forEach(m => {
       const color = jobColors[m.job] || "#888";
-
       const $piece = $(`
         <div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${color}">
-          ${m.name}（${m.job}）
+          ${m.name}
         </div>
       `);
-
       enableDrag($piece);
-      $("#zoneA").append($piece);
+      $("#unassigned").append($piece);
     });
 
     updateCounts();
-    showStatus(file + " を読み込みました", false);
+    showStatus(file + " を読み込みました");
   }
 
-  /* ▼ 編成一覧 */
+  /* ▼ 編成一覧ロード */
   async function loadFormationList() {
-    const owner = "kexekita-create";
-    const repo  = "twitter-to-rox";
-
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/data`);
-    if (!res.ok) return;
-
+    const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
     const files = await res.json();
+
     const list = files
-      .filter(f => f.name.startsWith("formation-") && f.name.endsWith(".json"))
+      .filter(f => f.name.startsWith("formation-"))
       .map(f => f.name)
       .sort();
 
     const $sel = $("#formationSelect");
     $sel.empty();
-    list.forEach(name => {
-      $sel.append(`<option value="${name}">${name}</option>`);
-    });
+    list.forEach(name => $sel.append(`<option value="${name}">${name}</option>`));
   }
 
   /* ▼ 編成ロード */
   async function loadFormation() {
-    const owner = "kexekita-create";
-    const repo  = "twitter-to-rox";
-    const file  = $("#formationSelect").val();
-    if (!file) return;
-
-    const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/data/${file}`);
+    const file = $("#formationSelect").val();
+    const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
     const json = await res.json();
 
-    zones.forEach(z => $("#" + z + " .piece").remove());
+    $(".piece").remove();
 
-    const formation = json.formation || {};
+    const formation = json.formation;
 
     Object.keys(formation).forEach(zoneId => {
-      const members = formation[zoneId];
-      members.forEach(m => {
+      formation[zoneId].forEach(m => {
         const color = jobColors[m.job] || "#888";
         const $piece = $(`
           <div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${color}">
-            ${m.name}（${m.job}）
+            ${m.name}
           </div>
         `);
         enableDrag($piece);
@@ -277,22 +272,17 @@ $(function () {
     });
 
     updateCounts();
-    showStatus(file + " を読み込みました", false);
+    showStatus(file + " を読み込みました");
   }
 
-  /* ▼ ドラッグ処理（PC + スマホ対応） */
+  /* ▼ ドラッグ処理 */
   function enableDrag($piece) {
     let dragging = false;
-    let offsetX = 0;
-    let offsetY = 0;
-    let $placeholder = null;
-    let $originZone = null;
+    let offsetX = 0, offsetY = 0;
 
     $piece.on("mousedown touchstart", function (e) {
       e.preventDefault();
-
       dragging = true;
-      $originZone = $(this).closest(".zone");
 
       const clientX = e.clientX || e.originalEvent.touches[0].clientX;
       const clientY = e.clientY || e.originalEvent.touches[0].clientY;
@@ -301,12 +291,8 @@ $(function () {
       offsetX = clientX - rect.left;
       offsetY = clientY - rect.top;
 
-      $placeholder = $("<div class='placeholder'></div>");
-      $placeholder.height(rect.height);
-      $(this).after($placeholder);
-
-      $(this).addClass("dragging");
-      movePiece($(this), clientX, clientY);
+      $piece.addClass("dragging");
+      movePiece($piece, clientX, clientY);
     });
 
     $(document).on("mousemove touchmove", function (e) {
@@ -326,31 +312,50 @@ $(function () {
       const clientY = e.clientY || (e.originalEvent.changedTouches && e.originalEvent.changedTouches[0].clientY);
 
       const target = document.elementFromPoint(clientX, clientY);
-      const $zone = $(target).closest(".zone");
-
-      if ($zone.length > 0) {
-        $zone.append($piece);
-      } else if ($originZone) {
-        $originZone.append($piece);
-      }
+      const $zone = $(target).closest(".zone, #unassigned");
 
       $piece.removeClass("dragging");
       $piece.css({ left: "", top: "" });
 
-      if ($placeholder) $placeholder.remove();
+      if ($zone.length > 0) {
+        if ($zone.attr("id") !== "unassigned") {
+          if ($zone.children(".piece").length >= 15) {
+            $("#unassigned").append($piece);
+          } else {
+            $zone.append($piece);
+          }
+        } else {
+          $("#unassigned").append($piece);
+        }
+      }
 
       updateCounts();
     });
   }
 
-  function movePiece($el, clientX, clientY) {
-    $el.css({
-      left: (clientX - offsetX) + "px",
-      top:  (clientY - offsetY) + "px"
-    });
+  function movePiece($el, x, y) {
+    $el.css({ left: x - 60 + "px", top: y - 20 + "px" });
   }
 
-  /* ▼ 編成保存 */
+  /* ▼ 整列 */
+  function sortZone(zoneId) {
+    const $zone = $("#" + zoneId);
+    const pieces = $zone.children(".piece").get();
+
+    pieces.sort((a, b) => {
+      const jobA = $(a).data("job");
+      const jobB = $(b).data("job");
+      return jobOrder.indexOf(jobA) - jobOrder.indexOf(jobB);
+    });
+
+    pieces.forEach(p => $zone.append(p));
+  }
+
+  $("#sortBtn").on("click", function () {
+    zones.forEach(sortZone);
+  });
+
+  /* ▼ 保存 */
   async function saveFormation() {
     const formation = {};
 
@@ -375,24 +380,15 @@ $(function () {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
+
+    showStatus("編成を保存しました");
   }
 
-  $("#saveBtn").on("click", async function () {
-    try {
-      await saveFormation();
-      showStatus("編成を保存しました", false);
-      await loadFormationList();
-    } catch (e) {
-      showStatus("保存に失敗: " + e.message, true);
-    }
-  });
+  $("#saveBtn").on("click", saveFormation);
 
-  function showStatus(msg, isError) {
-    const $s = $("#status");
-    $s.text(msg)
-      .css("background", isError ? "#a33" : "#2a2a2a")
-      .fadeIn(150);
-    setTimeout(() => $s.fadeOut(300), 3000);
+  function showStatus(msg) {
+    $("#status").text(msg).fadeIn(150);
+    setTimeout(() => $("#status").fadeOut(300), 2000);
   }
 
   /* ▼ 初期化 */

@@ -10,32 +10,34 @@
     background: #1e1e1e;
     color: #fff;
     font-family: "Segoe UI", sans-serif;
-    padding: 20px;
+    padding: 10px;
     margin: 0;
     overflow: hidden;
   }
 
-  h2 { margin-bottom: 10px; }
+  h2 { margin-bottom: 10px; font-size: 20px; }
 
   #loadArea {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     background: #2a2a2a;
     padding: 10px;
     border-radius: 6px;
-    width: 480px;
+    width: 100%;
+    max-width: 480px;
     border: 1px solid #444;
   }
 
   #saveBtn, #sortBtn, #loadBtn, #formationLoadBtn {
     background: #0078ff;
     color: white;
-    padding: 8px 16px;
+    padding: 6px 12px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
-    margin-top: 10px;
-    margin-right: 10px;
+    margin-top: 8px;
+    margin-right: 8px;
+    font-size: 14px;
   }
 
   #status {
@@ -46,14 +48,14 @@
     display: none;
   }
 
-  /* 2×2 グリッド固定 */
+  /* 2×3 グリッド */
   #board {
     display: grid !important;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 20px;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
     width: 100%;
-    height: calc(100vh - 200px);
+    height: calc(100vh - 220px);
     overflow: hidden;
     box-sizing: border-box;
   }
@@ -62,22 +64,27 @@
     background: #2a2a2a;
     border: 2px solid #555;
     border-radius: 6px;
-    padding: 10px;
+    padding: 6px;
     box-sizing: border-box;
 
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 
     overflow-y: auto;
     overflow-x: hidden;
   }
 
+  .zone h3 {
+    margin: 0 0 4px 0;
+    font-size: 15px;
+  }
+
   .piece {
-    padding: 6px 10px;
+    padding: 4px 8px;
     border-radius: 4px;
     cursor: grab;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
     width: 100%;
     box-sizing: border-box;
@@ -89,11 +96,11 @@
     z-index: 9999;
     pointer-events: none;
     opacity: 0.9;
-    width: 220px;
+    width: 180px;
   }
 
   .placeholder {
-    height: 28px;
+    height: 22px;
     border: 1px dashed #666;
     border-radius: 4px;
   }
@@ -122,288 +129,21 @@
 </div>
 
 <div id="board">
-  <div class="zone" id="zone1"><h3>エリア1</h3></div>
-  <div class="zone" id="zone2"><h3>エリア2</h3></div>
-  <div class="zone" id="zone3"><h3>エリア3</h3></div>
-  <div class="zone" id="zone4"><h3>エリア4</h3></div>
+  <div class="zone" id="zoneA"><h3>チームA（0）</h3></div>
+  <div class="zone" id="zoneB"><h3>チームB（0）</h3></div>
+  <div class="zone" id="zoneC"><h3>チームC（0）</h3></div>
+  <div class="zone" id="zoneD"><h3>チームD（0）</h3></div>
+  <div class="zone" id="zoneE"><h3>チームE（0）</h3></div>
+  <div class="zone" id="zoneF"><h3>チームF（0）</h3></div>
 </div>
 
 <script>
 $(function () {
 
-  /* ▼ 指定通りの濃淡カラーに更新済み */
+  /* ▼ 指定通りの濃淡カラー */
   const jobColors = {
-    "ルーンナイト":      "#b30000", // 濃い目赤
-    "ロイヤルガード":    "#ff4d4d", // 赤
-
-    "ウォーロック":      "#0033cc", // 濃い目青
-    "ソーサラー":        "#4d79ff", // 青
-
-    "アークビショップ":  "#cc9900", // 濃い目黄色
-    "修羅":              "#ffcc00", // 黄色
-
-    "レンジャー":        "#006600", // 濃い目緑
-    "ミンストレル":      "#33cc33", // 緑
-    "ワンダラー":        "#33cc33", // 緑
-
-    "ギロチンクロス":    "#4d0066", // 濃い目紫
-    "シャドウチェイサー": "#9933cc", // 紫
-
-    "ジェネティック":    "#0099cc", // 濃い目水色
-    "メカニック":        "#66d9ff", // 水色
-
-    "ハイパーノービス":  "#ffffff"  // 白
-  };
-
-  /* ▼ 並び順もロイヤルガードに統一 */
-  const jobOrder = [
-    "ルーンナイト","ロイヤルガード","ウォーロック","ソーサラー","アークビショップ",
-    "修羅","レンジャー","ミンストレル","ワンダラー","ギロチンクロス",
-    "シャドウチェイサー","ジェネティック","メカニック","ハイパーノービス"
-  ];
-
-  // メンバーJSON一覧
-  async function loadFileList() {
-    const owner = "kexekita-create";
-    const repo  = "twitter-to-rox";
-
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/data`);
-    if (!res.ok) return;
-
-    const files = await res.json();
-    const list = files
-      .filter(f => f.name.startsWith("members-") && f.name.endsWith(".json"))
-      .map(f => f.name)
-      .sort();
-
-    const $sel = $("#loadSelect");
-    $sel.empty();
-    list.forEach(name => {
-      $sel.append(`<option value="${name}">${name}</option>`);
-    });
-  }
-
-  // メンバーJSON読み込み
-  async function loadSelectedFile() {
-    const owner = "kexekita-create";
-    const repo  = "twitter-to-rox";
-    const file = $("#loadSelect").val();
-    if (!file) return;
-
-    const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/data/${file}`);
-    const json = await res.json();
-
-    $(".zone .piece").remove();
-
-    const members = json.members.filter(m => m.join === "可");
-
-    members.forEach(m => {
-      const color = jobColors[m.job] || "#888";
-
-      const $piece = $(`
-        <div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${color}">
-          ${m.name}（${m.job}）
-        </div>
-      `);
-
-      enableDrag($piece);
-      $("#zone1").append($piece);
-    });
-
-    showStatus(file + " を読み込みました", false);
-  }
-
-  // 編成ファイル一覧
-  async function loadFormationList() {
-    const owner = "kexekita-create";
-    const repo  = "twitter-to-rox";
-
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/data`);
-    if (!res.ok) return;
-
-    const files = await res.json();
-    const list = files
-      .filter(f => f.name.startsWith("formation-") && f.name.endsWith(".json"))
-      .map(f => f.name)
-      .sort();
-
-    const $sel = $("#formationSelect");
-    $sel.empty();
-    list.forEach(name => {
-      $sel.append(`<option value="${name}">${name}</option>`);
-    });
-  }
-
-  // 編成ロード
-  async function loadFormation() {
-    const owner = "kexekita-create";
-    const repo  = "twitter-to-rox";
-    const file  = $("#formationSelect").val();
-    if (!file) return;
-
-    const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/data/${file}`);
-    if (!res.ok) {
-      showStatus("編成ロードに失敗しました", true);
-      return;
-    }
-
-    const json = await res.json();
-
-    ["zone1","zone2","zone3","zone4"].forEach(z => {
-      $("#" + z + " .piece").remove();
-    });
-
-    const formation = json.formation || {};
-
-    Object.keys(formation).forEach(zoneId => {
-      const members = formation[zoneId];
-      members.forEach(m => {
-        const color = jobColors[m.job] || "#888";
-        const $piece = $(`
-          <div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${color}">
-            ${m.name}（${m.job}）
-          </div>
-        `);
-        enableDrag($piece);
-        $("#" + zoneId).append($piece);
-      });
-    });
-
-    showStatus(file + " を読み込みました", false);
-  }
-
-  // ドラッグ処理
-  function enableDrag($piece) {
-    let dragging = false;
-    let offsetX = 0;
-    let offsetY = 0;
-    let $placeholder = null;
-    let $originZone = null;
-
-    $piece.on("mousedown", function (e) {
-      e.preventDefault();
-
-      dragging = true;
-      $originZone = $(this).closest(".zone");
-
-      const rect = this.getBoundingClientRect();
-      offsetX = e.clientX - rect.left;
-      offsetY = e.clientY - rect.top;
-
-      $placeholder = $("<div class='placeholder'></div>");
-      $placeholder.height(rect.height);
-      $(this).after($placeholder);
-
-      $(this).addClass("dragging");
-      movePiece($(this), e.clientX, e.clientY);
-    });
-
-    $(document).on("mousemove", function (e) {
-      if (!dragging) return;
-      movePiece($piece, e.clientX, e.clientY);
-    });
-
-    $(document).on("mouseup", function (e) {
-      if (!dragging) return;
-      dragging = false;
-
-      const target = document.elementFromPoint(e.clientX, e.clientY);
-      const $zone = $(target).closest(".zone");
-
-      if ($zone.length > 0) {
-        $zone.append($piece);
-      } else if ($originZone) {
-        $originZone.append($piece);
-      }
-
-      $piece.removeClass("dragging");
-      $piece.css({ left: "", top: "" });
-
-      if ($placeholder) {
-        $placeholder.remove();
-        $placeholder = null;
-      }
-      $originZone = null;
-    });
-  }
-
-  function movePiece($el, clientX, clientY) {
-    $el.css({
-      left: (clientX - offsetX) + "px",
-      top:  (clientY - offsetY) + "px"
-    });
-  }
-
-  // 職業ごと整列
-  function sortZone(zoneId) {
-    const $zone = $("#" + zoneId);
-    const pieces = $zone.children(".piece").get();
-
-    pieces.sort((a, b) => {
-      const jobA = $(a).data("job");
-      const jobB = $(b).data("job");
-      return jobOrder.indexOf(jobA) - jobOrder.indexOf(jobB);
-    });
-
-    pieces.forEach(p => $zone.append(p));
-  }
-
-  $("#sortBtn").on("click", function () {
-    ["zone1","zone2","zone3","zone4"].forEach(sortZone);
-  });
-
-  // 編成保存（Worker に送信）
-  async function saveFormation() {
-    const formation = { zone1: [], zone2: [], zone3: [], zone4: [] };
-
-    ["zone1","zone2","zone3","zone4"].forEach(zone => {
-      $("#" + zone + " .piece").each(function () {
-        formation[zone].push({
-          name: $(this).data("name"),
-          job: $(this).data("job")
-        });
-      });
-    });
-
-    const payload = {
-      type: "formation",
-      timestamp: new Date().toISOString(),
-      formation
-    };
-
-    await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-  }
-
-  $("#saveBtn").on("click", async function () {
-    try {
-      await saveFormation();
-      showStatus("編成を保存しました", false);
-      await loadFormationList();
-    } catch (e) {
-      showStatus("保存に失敗: " + e.message, true);
-    }
-  });
-
-  function showStatus(msg, isError) {
-    const $s = $("#status");
-    $s.text(msg)
-      .css("background", isError ? "#a33" : "#2a2a2a")
-      .fadeIn(150);
-    setTimeout(() => $s.fadeOut(300), 3000);
-  }
-
-  // 初期化
-  loadFileList();
-  loadFormationList();
-  $("#loadBtn").on("click", loadSelectedFile);
-  $("#formationLoadBtn").on("click", loadFormation);
-
-});
-</script>
-
-</body>
-</html>
+    "ルーンナイト":      "#b30000",
+    "ロイヤルガード":    "#ff4d4d",
+    "ウォーロック":      "#0033cc",
+    "ソーサラー":        "#4d79ff",
+    "アークビショップ":  "#cc990

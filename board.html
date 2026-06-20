@@ -12,12 +12,28 @@
     font-family: "Segoe UI", sans-serif;
     padding: 10px;
     margin: 0;
-    height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
   }
 
   h2 { margin-bottom: 10px; font-size: 22px; }
+
+  /* ▼ タブ */
+  #tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  .tab {
+    padding: 8px 16px;
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  .tab.active {
+    background: #0078ff;
+    border-color: #0078ff;
+  }
 
   #loadArea {
     margin-bottom: 10px;
@@ -131,6 +147,13 @@
 
 <h2>配置ボード（参加可のメンバーのみ）</h2>
 
+<!-- ▼ タブ -->
+<div id="tabs">
+  <button class="tab active" data-mode="gvg">GvG</button>
+  <button class="tab" data-mode="xgvg">XGvG</button>
+  <button class="tab" data-mode="60">60vs60</button>
+</div>
+
 <div id="loadArea">
   <label>読み込む JSON：</label><br>
   <select id="loadSelect" style="margin-top:5px; width:260px; font-size:15px;"></select>
@@ -171,6 +194,16 @@
 <script>
 $(function () {
 
+  /* ▼ 現在のモード（タブ） */
+  let currentMode = "gvg";
+
+  $(".tab").on("click", function () {
+    $(".tab").removeClass("active");
+    $(this).addClass("active");
+    currentMode = $(this).data("mode");
+    loadFormationList();
+  });
+
   /* ▼ 目に優しい黄色職 */
   const jobColors = {
     "ルーンナイト": "#b30000",
@@ -179,8 +212,8 @@ $(function () {
     "ウォーロック": "#0033cc",
     "ソーサラー": "#4d79ff",
 
-    "アークビショップ": "#bfa76a", // 柔らかい金色
-    "修羅": "#a68b54",             // 黄土色
+    "アークビショップ": "#bfa76a",
+    "修羅": "#a68b54",
 
     "レンジャー": "#006600",
     "ミンストレル": "#33cc33",
@@ -213,14 +246,21 @@ $(function () {
     "ハイパーノービス": "ノ"
   };
 
-  const jobOrder = Object.keys(jobShort);
+  /* ▼ 文字色自動判定 */
+  function getTextColor(bg) {
+    const r = parseInt(bg.substr(1,2), 16);
+    const g = parseInt(bg.substr(3,2), 16);
+    const b = parseInt(bg.substr(5,2), 16);
+    const luminance = (0.299*r + 0.587*g + 0.114*b);
+    return luminance > 150 ? "#000" : "#fff";
+  }
 
+  const jobOrder = Object.keys(jobShort);
   const zones = ["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"];
 
   /* ▼ カウント更新 */
   function updateCounts() {
     $("#unassigned h3").text(`未配属（${$("#unassigned .piece").length}）`);
-
     zones.forEach(id => {
       const count = $("#" + id + " .slot .piece").length;
       $("#" + id + " h3").text(`チーム${id.replace("zone","")}（${count}）`);
@@ -239,7 +279,7 @@ $(function () {
     );
   }
 
-  /* ▼ メンバー読み込み（未配属に全部入れる） */
+  /* ▼ メンバー読み込み */
   async function loadSelectedFile() {
     const file = $("#loadSelect").val();
     const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
@@ -249,10 +289,11 @@ $(function () {
 
     json.members.filter(m => m.join === "可").forEach(m => {
       const short = jobShort[m.job] || "？";
-      const color = jobColors[m.job] || "#888";
+      const bg = jobColors[m.job] || "#888";
+      const textColor = getTextColor(bg);
 
       const $p = $(`<div class="piece" data-name="${m.name}" data-job="${m.job}"
-        style="background:${color}; color:#000;">[${short}] ${m.name}</div>`);
+        style="background:${bg}; color:${textColor};">[${short}] ${m.name}</div>`);
 
       enableDrag($p);
       $("#unassigned").append($p);
@@ -262,14 +303,20 @@ $(function () {
     showStatus(file + " を読み込みました");
   }
 
-  /* ▼ 編成一覧ロード */
+  /* ▼ 編成一覧ロード（タブごとにフィルタ） */
   async function loadFormationList() {
+    const prefix = {
+      gvg: "formation-gvg",
+      xgvg: "formation-xgvg",
+      "60": "formation-60"
+    }[currentMode];
+
     const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
     const files = await res.json();
 
     $("#formationSelect").empty().append(
       files
-        .filter(f => f.name.startsWith("formation-"))
+        .filter(f => f.name.startsWith(prefix))
         .map(f => `<option value="${f.name}">${f.name}</option>`)
     );
   }
@@ -287,10 +334,11 @@ $(function () {
     Object.keys(formation).forEach(zoneId => {
       formation[zoneId].forEach(m => {
         const short = jobShort[m.job] || "？";
-        const color = jobColors[m.job] || "#888";
+        const bg = jobColors[m.job] || "#888";
+        const textColor = getTextColor(bg);
 
         const $p = $(`<div class="piece" data-name="${m.name}" data-job="${m.job}"
-          style="background:${color}; color:#000;">[${short}] ${m.name}</div>`);
+          style="background:${bg}; color:${textColor};">[${short}] ${m.name}</div>`);
 
         enableDrag($p);
 
@@ -314,7 +362,6 @@ $(function () {
   /* ▼ ドラッグ処理 */
   function enableDrag($p) {
     let dragging = false;
-    let offsetX = 0, offsetY = 0;
 
     $p.on("mousedown touchstart", function (e) {
       e.preventDefault();
@@ -322,10 +369,6 @@ $(function () {
 
       const x = e.clientX || e.originalEvent.touches[0].clientX;
       const y = e.clientY || e.originalEvent.touches[0].clientY;
-
-      const rect = this.getBoundingClientRect();
-      offsetX = x - rect.left;
-      offsetY = y - rect.top;
 
       $p.addClass("dragging");
       movePiece($p, x, y);
@@ -405,8 +448,14 @@ $(function () {
 
   $("#sortBtn").on("click", sortUnassigned);
 
-  /* ▼ 保存 */
+  /* ▼ 保存（タブごとにファイル名変更） */
   async function saveFormation() {
+    const prefix = {
+      gvg: "formation-gvg",
+      xgvg: "formation-xgvg",
+      "60": "formation-60"
+    }[currentMode];
+
     const formation = { unassigned: [] };
 
     $("#unassigned .piece").each(function () {
@@ -431,6 +480,7 @@ $(function () {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: "formation",
+        prefix,
         timestamp: new Date().toISOString(),
         formation
       })

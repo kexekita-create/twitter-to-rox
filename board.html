@@ -22,11 +22,11 @@
     background: #2a2a2a;
     padding: 10px;
     border-radius: 6px;
-    width: 450px;
+    width: 480px;
     border: 1px solid #444;
   }
 
-  #saveBtn, #sortBtn, #loadBtn {
+  #saveBtn, #sortBtn, #loadBtn, #formationLoadBtn {
     background: #0078ff;
     color: white;
     padding: 8px 16px;
@@ -46,7 +46,7 @@
     display: none;
   }
 
-  /* ★ 2×2 グリッドを強制 ★ */
+  /* 2×2 グリッド固定 */
   #board {
     display: grid !important;
     grid-template-columns: 1fr 1fr;
@@ -106,8 +106,13 @@
 
 <div id="loadArea">
   <label>読み込む JSON：</label><br>
-  <select id="loadSelect" style="margin-top:5px; width:200px;"></select>
+  <select id="loadSelect" style="margin-top:5px; width:260px;"></select>
   <button id="loadBtn">読み込み</button>
+
+  <br><br>
+  <label>編成一覧：</label><br>
+  <select id="formationSelect" style="margin-top:5px; width:260px;"></select>
+  <button id="formationLoadBtn">編成ロード</button>
 
   <br><br>
   <button id="sortBtn">職業ごとに整列</button>
@@ -149,6 +154,7 @@ $(function () {
     "シャドウチェイサー","ジェネティック","メカニック","ハイパーノービス"
   ];
 
+  // メンバーJSON一覧
   async function loadFileList() {
     const owner = "kexekita-create";
     const repo  = "twitter-to-rox";
@@ -169,10 +175,12 @@ $(function () {
     });
   }
 
+  // メンバーJSON読み込み
   async function loadSelectedFile() {
     const owner = "kexekita-create";
     const repo  = "twitter-to-rox";
     const file = $("#loadSelect").val();
+    if (!file) return;
 
     const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/data/${file}`);
     const json = await res.json();
@@ -193,8 +201,70 @@ $(function () {
       enableDrag($piece);
       $("#zone1").append($piece);
     });
+
+    showStatus(file + " を読み込みました", false);
   }
 
+  // 編成ファイル一覧
+  async function loadFormationList() {
+    const owner = "kexekita-create";
+    const repo  = "twitter-to-rox";
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/data`);
+    if (!res.ok) return;
+
+    const files = await res.json();
+    const list = files
+      .filter(f => f.name.startsWith("formation-") && f.name.endsWith(".json"))
+      .map(f => f.name)
+      .sort();
+
+    const $sel = $("#formationSelect");
+    $sel.empty();
+    list.forEach(name => {
+      $sel.append(`<option value="${name}">${name}</option>`);
+    });
+  }
+
+  // 編成ロード
+  async function loadFormation() {
+    const owner = "kexekita-create";
+    const repo  = "twitter-to-rox";
+    const file  = $("#formationSelect").val();
+    if (!file) return;
+
+    const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/data/${file}`);
+    if (!res.ok) {
+      showStatus("編成ロードに失敗しました", true);
+      return;
+    }
+
+    const json = await res.json();
+
+    ["zone1","zone2","zone3","zone4"].forEach(z => {
+      $("#" + z + " .piece").remove();
+    });
+
+    const formation = json.formation || {};
+
+    Object.keys(formation).forEach(zoneId => {
+      const members = formation[zoneId];
+      members.forEach(m => {
+        const color = jobColors[m.job] || "#888";
+        const $piece = $(`
+          <div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${color}">
+            ${m.name}（${m.job}）
+          </div>
+        `);
+        enableDrag($piece);
+        $("#" + zoneId).append($piece);
+      });
+    });
+
+    showStatus(file + " を読み込みました", false);
+  }
+
+  // ドラッグ処理
   function enableDrag($piece) {
     let dragging = false;
     let offsetX = 0;
@@ -256,6 +326,7 @@ $(function () {
     });
   }
 
+  // 職業ごと整列
   function sortZone(zoneId) {
     const $zone = $("#" + zoneId);
     const pieces = $zone.children(".piece").get();
@@ -273,6 +344,7 @@ $(function () {
     ["zone1","zone2","zone3","zone4"].forEach(sortZone);
   });
 
+  // 編成保存（今まで通り Worker に投げる）
   async function saveFormation() {
     const formation = { zone1: [], zone2: [], zone3: [], zone4: [] };
 
@@ -302,6 +374,7 @@ $(function () {
     try {
       await saveFormation();
       showStatus("編成を保存しました", false);
+      await loadFormationList(); // 保存後に一覧更新
     } catch (e) {
       showStatus("保存に失敗: " + e.message, true);
     }
@@ -315,8 +388,11 @@ $(function () {
     setTimeout(() => $s.fadeOut(300), 3000);
   }
 
+  // 初期化
   loadFileList();
+  loadFormationList();
   $("#loadBtn").on("click", loadSelectedFile);
+  $("#formationLoadBtn").on("click", loadFormation);
 
 });
 </script>

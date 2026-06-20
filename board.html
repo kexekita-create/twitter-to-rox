@@ -50,7 +50,7 @@
     display: none;
   }
 
-  /* ▼ 未配属（6列グリッド） */
+  /* 未配属（6列グリッド） */
   #unassigned {
     background: #2a2a2a;
     border: 2px solid #555;
@@ -72,7 +72,7 @@
     font-size: 15px;
   }
 
-  /* ▼ チーム（3×5グリッド） */
+  /* チーム（3×5の枠を見せる） */
   .zone {
     background: #2a2a2a;
     border: 2px solid #555;
@@ -82,7 +82,7 @@
 
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    grid-auto-rows: minmax(40px, auto);
+    grid-auto-rows: 40px;
     gap: 4px;
 
     min-height: 150px;
@@ -94,6 +94,13 @@
     font-size: 15px;
   }
 
+  .slot {
+    border: 1px dashed #555;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
   .piece {
     padding: 4px;
     border-radius: 4px;
@@ -102,6 +109,9 @@
     font-weight: bold;
     text-align: center;
     user-select: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
   }
 
   .dragging {
@@ -111,7 +121,6 @@
     opacity: 0.9;
     width: 120px;
   }
-
 </style>
 </head>
 
@@ -130,31 +139,59 @@
   <button id="formationLoadBtn">編成ロード</button>
 
   <br><br>
-  <button id="sortBtn">職業ごとに整列</button>
+  <button id="sortBtn">未配属を職業ごとに整列</button>
   <button id="saveBtn">編成を保存</button>
 
   <div id="status"></div>
 </div>
 
-<!-- ▼ 未配属 -->
 <div id="unassigned">
   <h3>未配属（0）</h3>
 </div>
 
-<!-- ▼ チーム 2×3 -->
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-  <div class="zone" id="zoneA"><h3>チームA（0）</h3></div>
-  <div class="zone" id="zoneB"><h3>チームB（0）</h3></div>
-  <div class="zone" id="zoneC"><h3>チームC（0）</h3></div>
-  <div class="zone" id="zoneD"><h3>チームD（0）</h3></div>
-  <div class="zone" id="zoneE"><h3>チームE（0）</h3></div>
-  <div class="zone" id="zoneF"><h3>チームF（0）</h3></div>
+  <div class="zone" id="zoneA">
+    <h3>チームA（0）</h3>
+    <!-- 3×5 = 15枠 -->
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+  </div>
+  <div class="zone" id="zoneB">
+    <h3>チームB（0）</h3>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+  </div>
+  <div class="zone" id="zoneC">
+    <h3>チームC（0）</h3>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+  </div>
+  <div class="zone" id="zoneD">
+    <h3>チームD（0）</h3>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+  </div>
+  <div class="zone" id="zoneE">
+    <h3>チームE（0）</h3>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+  </div>
+  <div class="zone" id="zoneF">
+    <h3>チームF（0）</h3>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+  </div>
 </div>
 
 <script>
 $(function () {
 
-  /* ▼ 色設定 */
   const jobColors = {
     "ルーンナイト": "#b30000",
     "ロイヤルガード": "#ff4d4d",
@@ -180,20 +217,18 @@ $(function () {
 
   const zones = ["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"];
 
-  /* ▼ カウント更新 */
   function updateCounts() {
     const unassignedCount = $("#unassigned .piece").length;
     $("#unassigned h3").text(`未配属（${unassignedCount}）`);
 
     zones.forEach(id => {
-      const count = $("#" + id + " .piece").length;
+      const count = $("#" + id + " .slot .piece").length;
       $("#" + id + " h3").text(
         $("#" + id + " h3").text().replace(/\（.*?\）/, `（${count}）`)
       );
     });
   }
 
-  /* ▼ メンバー一覧ロード */
   async function loadFileList() {
     const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
     const files = await res.json();
@@ -208,7 +243,6 @@ $(function () {
     list.forEach(name => $sel.append(`<option value="${name}">${name}</option>`));
   }
 
-  /* ▼ メンバー読み込み（未配属に全部入れる） */
   async function loadSelectedFile() {
     const file = $("#loadSelect").val();
     const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
@@ -233,7 +267,6 @@ $(function () {
     showStatus(file + " を読み込みました");
   }
 
-  /* ▼ 編成一覧ロード */
   async function loadFormationList() {
     const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
     const files = await res.json();
@@ -248,7 +281,6 @@ $(function () {
     list.forEach(name => $sel.append(`<option value="${name}">${name}</option>`));
   }
 
-  /* ▼ 編成ロード */
   async function loadFormation() {
     const file = $("#formationSelect").val();
     const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
@@ -256,7 +288,7 @@ $(function () {
 
     $(".piece").remove();
 
-    const formation = json.formation;
+    const formation = json.formation || {};
 
     Object.keys(formation).forEach(zoneId => {
       formation[zoneId].forEach(m => {
@@ -267,7 +299,21 @@ $(function () {
           </div>
         `);
         enableDrag($piece);
-        $("#" + zoneId).append($piece);
+
+        if (zoneId === "unassigned") {
+          $("#unassigned").append($piece);
+        } else {
+          const $zone = $("#" + zoneId);
+          const $emptySlot = $zone.find(".slot").filter(function () {
+            return $(this).children(".piece").length === 0;
+          }).first();
+
+          if ($emptySlot.length) {
+            $emptySlot.append($piece);
+          } else {
+            $("#unassigned").append($piece);
+          }
+        }
       });
     });
 
@@ -275,7 +321,6 @@ $(function () {
     showStatus(file + " を読み込みました");
   }
 
-  /* ▼ ドラッグ処理 */
   function enableDrag($piece) {
     let dragging = false;
     let offsetX = 0, offsetY = 0;
@@ -312,20 +357,37 @@ $(function () {
       const clientY = e.clientY || (e.originalEvent.changedTouches && e.originalEvent.changedTouches[0].clientY);
 
       const target = document.elementFromPoint(clientX, clientY);
-      const $zone = $(target).closest(".zone, #unassigned");
+      const $zone = $(target).closest(".zone, #unassigned, .slot");
 
       $piece.removeClass("dragging");
       $piece.css({ left: "", top: "" });
 
       if ($zone.length > 0) {
-        if ($zone.attr("id") !== "unassigned") {
-          if ($zone.children(".piece").length >= 15) {
+        if ($zone.attr("id") === "unassigned") {
+          $("#unassigned").append($piece);
+        } else if ($zone.hasClass("slot")) {
+          const $parentZone = $zone.closest(".zone");
+          const currentCount = $parentZone.find(".slot .piece").length;
+
+          if (currentCount >= 15 && $zone.children(".piece").length === 0) {
             $("#unassigned").append($piece);
           } else {
+            if ($zone.children(".piece").length > 0) {
+              const $existing = $zone.children(".piece").first();
+              $("#unassigned").append($existing);
+            }
             $zone.append($piece);
           }
-        } else {
-          $("#unassigned").append($piece);
+        } else if ($zone.hasClass("zone")) {
+          const $emptySlot = $zone.find(".slot").filter(function () {
+            return $(this).children(".piece").length === 0;
+          }).first();
+
+          if ($emptySlot.length) {
+            $emptySlot.append($piece);
+          } else {
+            $("#unassigned").append($piece);
+          }
         }
       }
 
@@ -337,9 +399,8 @@ $(function () {
     $el.css({ left: x - 60 + "px", top: y - 20 + "px" });
   }
 
-  /* ▼ 整列 */
-  function sortZone(zoneId) {
-    const $zone = $("#" + zoneId);
+  function sortUnassigned() {
+    const $zone = $("#unassigned");
     const pieces = $zone.children(".piece").get();
 
     pieces.sort((a, b) => {
@@ -352,16 +413,22 @@ $(function () {
   }
 
   $("#sortBtn").on("click", function () {
-    zones.forEach(sortZone);
+    sortUnassigned();
   });
 
-  /* ▼ 保存 */
   async function saveFormation() {
-    const formation = {};
+    const formation = { unassigned: [] };
+
+    $("#unassigned .piece").each(function () {
+      formation.unassigned.push({
+        name: $(this).data("name"),
+        job: $(this).data("job")
+      });
+    });
 
     zones.forEach(zone => {
       formation[zone] = [];
-      $("#" + zone + " .piece").each(function () {
+      $("#" + zone + " .slot .piece").each(function () {
         formation[zone].push({
           name: $(this).data("name"),
           job: $(this).data("job")
@@ -391,7 +458,6 @@ $(function () {
     setTimeout(() => $("#status").fadeOut(300), 2000);
   }
 
-  /* ▼ 初期化 */
   loadFileList();
   loadFormationList();
   $("#loadBtn").on("click", loadSelectedFile);

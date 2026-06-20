@@ -16,7 +16,7 @@
 
   h2 { margin-bottom: 10px; font-size: 22px; }
 
-  /* ▼ タブ */
+  /* ▼ タブ（修正版） */
   #tabs {
     display: flex;
     gap: 10px;
@@ -24,15 +24,17 @@
   }
   .tab {
     padding: 8px 16px;
-    background: #333;
-    border: 1px solid #555;
+    background: #3a3a3a;      /* ← 非活性タブの背景を明るめに */
+    border: 1px solid #666;   /* ← 枠線も見えるように */
     border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
+    color: #ccc;              /* ← 非活性タブの文字色 */
   }
   .tab.active {
-    background: #0078ff;
+    background: #0078ff;      /* ← アクティブは青 */
     border-color: #0078ff;
+    color: #fff;              /* ← 白文字で視認性◎ */
   }
 
   #loadArea {
@@ -204,7 +206,7 @@ $(function () {
     loadFormationList();
   });
 
-  /* ▼ 目に優しい黄色職 */
+  /* ▼ 職業色（黄色職は優しい色） */
   const jobColors = {
     "ルーンナイト": "#b30000",
     "ロイヤルガード": "#ff4d4d",

@@ -4,51 +4,86 @@
 <meta charset="UTF-8">
 <title>配置ボード</title>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 
 <style>
-  body {
+  body, html {
     background: #1e1e1e;
     color: #fff;
     font-family: "Segoe UI", sans-serif;
     padding: 20px;
+    margin: 0;
+    overflow: hidden;
   }
-
-  h2 { margin-bottom: 10px; }
 
   #loadArea {
     margin-bottom: 20px;
     background: #2a2a2a;
     padding: 10px;
     border-radius: 6px;
-    width: 350px;
+    width: 450px;
     border: 1px solid #444;
+  }
+
+  #saveBtn, #sortBtn, #loadBtn {
+    background: #0078ff;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+    margin-right: 10px;
   }
 
   #board {
     display: flex;
     gap: 20px;
-    margin-top: 20px;
+    width: 100%;
+    height: calc(100vh - 200px);
+    overflow: hidden;
   }
 
   .zone {
-    width: 23%;
-    height: 600px;
+    flex: 1 1 0;
+    min-width: 0;
     background: #2a2a2a;
     border: 2px solid #555;
     border-radius: 6px;
     padding: 10px;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .piece {
     padding: 6px 10px;
-    margin: 6px 0;
     border-radius: 4px;
-    cursor: move;
+    cursor: grab;
     font-size: 14px;
     font-weight: bold;
+    width: 100%;
+    box-sizing: border-box;
+    user-select: none;
+  }
+
+  .dragging {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.9;
+    width: 220px;
+  }
+
+  .placeholder {
+    height: 28px;
+    border: 1px dashed #666;
+    border-radius: 4px;
   }
 </style>
 </head>
@@ -61,6 +96,12 @@
   <label>読み込む JSON：</label><br>
   <select id="loadSelect" style="margin-top:5px; width:200px;"></select>
   <button id="loadBtn">読み込み</button>
+
+  <br><br>
+  <button id="sortBtn">職業ごとに整列</button>
+  <button id="saveBtn">編成を保存</button>
+
+  <div id="status"></div>
 </div>
 
 <div id="board">
@@ -73,7 +114,6 @@
 <script>
 $(function () {
 
-  /* ▼ 職業ごとの色（自由に変えてOK） */
   const jobColors = {
     "ルーンナイト": "#ff6666",
     "3ロイヤルガード": "#ff9966",
@@ -91,7 +131,12 @@ $(function () {
     "ハイパーノービス": "#ffffff"
   };
 
-  /* ▼ GitHub からファイル一覧取得 */
+  const jobOrder = [
+    "ルーンナイト","3ロイヤルガード","ウォーロック","ソーサラー","アークビショップ",
+    "修羅","レンジャー","ミンストレル","ワンダラー","ギロチンクロス",
+    "シャドウチェイサー","ジェネティック","メカニック","ハイパーノービス"
+  ];
+
   async function loadFileList() {
     const owner = "kexekita-create";
     const repo  = "twitter-to-rox";
@@ -112,7 +157,6 @@ $(function () {
     });
   }
 
-  /* ▼ JSON 読み込み → ピース生成 */
   async function loadSelectedFile() {
     const owner = "kexekita-create";
     const repo  = "twitter-to-rox";
@@ -121,42 +165,144 @@ $(function () {
     const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/data/${file}`);
     const json = await res.json();
 
-    // 既存ピース削除
-    $(".zone").find(".piece").remove();
+    $(".zone .piece").remove();
 
-    // 参加可のみ抽出
     const members = json.members.filter(m => m.join === "可");
 
     members.forEach(m => {
       const color = jobColors[m.job] || "#888";
 
       const $piece = $(`
-        <div class="piece" style="background:${color}">
+        <div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${color}">
           ${m.name}（${m.job}）
         </div>
       `);
 
-      // ドラッグ可能にする
-      $piece.draggable({
-        revert: "invalid",
-        containment: "document",
-        scroll: true
-      });
-
-      // 初期配置はエリア1
+      enableDrag($piece);
       $("#zone1").append($piece);
     });
   }
 
-  /* ▼ ドロップ可能設定 */
-  $(".zone").droppable({
-    accept: ".piece",
-    drop: function (event, ui) {
-      $(this).append(ui.draggable);
+  function enableDrag($piece) {
+    let dragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+    let $placeholder = null;
+    let $originZone = null;
+
+    $piece.on("mousedown", function (e) {
+      e.preventDefault();
+
+      dragging = true;
+      $originZone = $(this).closest(".zone");
+
+      const rect = this.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+
+      $placeholder = $("<div class='placeholder'></div>");
+      $placeholder.height(rect.height);
+      $(this).after($placeholder);
+
+      $(this).addClass("dragging");
+      movePiece($(this), e.clientX, e.clientY);
+    });
+
+    $(document).on("mousemove", function (e) {
+      if (!dragging) return;
+      movePiece($piece, e.clientX, e.clientY);
+    });
+
+    $(document).on("mouseup", function (e) {
+      if (!dragging) return;
+      dragging = false;
+
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      const $zone = $(target).closest(".zone");
+
+      if ($zone.length > 0) {
+        $zone.append($piece);
+      } else if ($originZone) {
+        $originZone.append($piece);
+      }
+
+      $piece.removeClass("dragging");
+      $piece.css({ left: "", top: "" });
+
+      if ($placeholder) {
+        $placeholder.remove();
+        $placeholder = null;
+      }
+      $originZone = null;
+    });
+  }
+
+  function movePiece($el, clientX, clientY) {
+    $el.css({
+      left: (clientX - offsetX) + "px",
+      top:  (clientY - offsetY) + "px"
+    });
+  }
+
+  function sortZone(zoneId) {
+    const $zone = $("#" + zoneId);
+    const pieces = $zone.children(".piece").get();
+
+    pieces.sort((a, b) => {
+      const jobA = $(a).data("job");
+      const jobB = $(b).data("job");
+      return jobOrder.indexOf(jobA) - jobOrder.indexOf(jobB);
+    });
+
+    pieces.forEach(p => $zone.append(p));
+  }
+
+  $("#sortBtn").on("click", function () {
+    ["zone1","zone2","zone3","zone4"].forEach(sortZone);
+  });
+
+  async function saveFormation() {
+    const formation = { zone1: [], zone2: [], zone3: [], zone4: [] };
+
+    ["zone1","zone2","zone3","zone4"].forEach(zone => {
+      $("#" + zone + " .piece").each(function () {
+        formation[zone].push({
+          name: $(this).data("name"),
+          job: $(this).data("job")
+        });
+      });
+    });
+
+    const payload = {
+      type: "formation",
+      timestamp: new Date().toISOString(),
+      formation
+    };
+
+    await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  $("#saveBtn").on("click", async function () {
+    try {
+      await saveFormation();
+      showStatus("編成を保存しました", false);
+    } catch (e) {
+      showStatus("保存に失敗: " + e.message, true);
     }
   });
 
-  /* ▼ 初期化 */
+  function showStatus(msg, isError) {
+    const $s = $("#status");
+    $s.text(msg)
+      .css("background", isError ? "#a33" : "#2a2a2a")
+      .fadeIn(150);
+    setTimeout(() => $s.fadeOut(300), 3000);
+  }
+
   loadFileList();
   $("#loadBtn").on("click", loadSelectedFile);
 

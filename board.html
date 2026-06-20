@@ -6,165 +6,38 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <style>
-  body, html {
-    background: #1e1e1e;
-    color: #fff;
-    font-family: "Segoe UI", sans-serif;
-    padding: 10px;
-    margin: 0;
-  }
+body,html{background:#1e1e1e;color:#fff;font-family:"Segoe UI";margin:0;padding:10px}
+h2{margin-bottom:10px;font-size:22px}
 
-  h2 { margin-bottom: 10px; font-size: 22px; }
+/* タブ */
+#tabs{display:flex;gap:10px;margin-bottom:10px;align-items:center}
+.tab{padding:8px 16px;background:#3a3a3a;border:1px solid #666;border-radius:6px;cursor:pointer;font-size:16px;color:#ccc}
+.tab.active{background:#0078ff;border-color:#0078ff;color:#fff}
 
-  /* ▼ タブ */
-  #tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-    align-items: center;
-  }
-  .tab {
-    padding: 8px 16px;
-    background: #3a3a3a;
-    border: 1px solid #666;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    color: #ccc;
-  }
-  .tab.active {
-    background: #0078ff;
-    border-color: #0078ff;
-    color: #fff;
-  }
+/* コピー先 */
+#copyButtons{display:flex;gap:8px;margin-left:20px}
+.copyBtn{padding:6px 12px;background:#444;border:1px solid #777;border-radius:6px;cursor:pointer;font-size:14px;color:#ddd}
+.copyBtn:hover{background:#555}
 
-  /* ▼ コピー先ボタン */
-  #copyButtons {
-    display: flex;
-    gap: 8px;
-    margin-left: 20px;
-  }
-  .copyBtn {
-    padding: 6px 12px;
-    background: #444;
-    border: 1px solid #777;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    color: #ddd;
-  }
-  .copyBtn:hover {
-    background: #555;
-  }
+/* 読み込みエリア */
+#loadArea{margin-bottom:10px;background:#2a2a2a;padding:12px;border-radius:6px;width:100%;max-width:520px;border:1px solid #444;font-size:16px}
+#saveBtn,#sortBtn,#loadBtn,#formationLoadBtn{background:#0078ff;color:#fff;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;margin-top:8px;margin-right:8px;font-size:15px}
+#status{margin-top:10px;background:#2a2a2a;padding:8px 12px;border-radius:4px;display:none;font-size:15px}
 
-  #loadArea {
-    margin-bottom: 10px;
-    background: #2a2a2a;
-    padding: 12px;
-    border-radius: 6px;
-    width: 100%;
-    max-width: 520px;
-    border: 1px solid #444;
-    font-size: 16px;
-  }
+/* 未配属 */
+#unassigned{background:#2a2a2a;border:2px solid #555;border-radius:6px;padding:6px;margin-bottom:15px;display:grid;grid-template-columns:repeat(6,1fr);gap:6px;max-height:320px;overflow-y:auto}
+#unassigned h3{grid-column:span 6;margin:0 0 6px 0;font-size:18px}
 
-  #saveBtn, #sortBtn, #loadBtn, #formationLoadBtn {
-    background: #0078ff;
-    color: white;
-    padding: 8px 14px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    margin-top: 8px;
-    margin-right: 8px;
-    font-size: 15px;
-  }
+/* チーム */
+.zone{background:#2a2a2a;border:2px solid #555;border-radius:6px;padding:6px;display:grid;grid-template-columns:repeat(5,1fr);grid-auto-rows:56px;gap:6px;min-height:180px}
+.zone h3{grid-column:span 5;margin:0 0 6px 0;font-size:18px}
+.slot{border:1px dashed #555;border-radius:4px;overflow:hidden}
 
-  #status {
-    margin-top: 10px;
-    background: #2a2a2a;
-    padding: 8px 12px;
-    border-radius: 4px;
-    display: none;
-    font-size: 15px;
-  }
+/* ピース */
+.piece{padding:6px 4px;border-radius:4px;cursor:grab;font-size:15px;font-weight:bold;text-align:center;user-select:none;width:100%;height:100%;box-sizing:border-box;line-height:1.3}
 
-  /* ▼ 未配属（6列グリッド） */
-  #unassigned {
-    background: #2a2a2a;
-    border: 2px solid #555;
-    border-radius: 6px;
-    padding: 6px;
-    margin-bottom: 15px;
-
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 6px;
-
-    max-height: 320px;
-    overflow-y: auto;
-  }
-
-  #unassigned h3 {
-    grid-column: span 6;
-    margin: 0 0 6px 0;
-    font-size: 18px;
-  }
-
-  /* ▼ チーム（3×5） */
-  .zone {
-    background: #2a2a2a;
-    border: 2px solid #555;
-    border-radius: 6px;
-    padding: 6px;
-    box-sizing: border-box;
-
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    grid-auto-rows: 56px;
-    gap: 6px;
-
-    min-height: 180px;
-  }
-
-  .zone h3 {
-    grid-column: span 5;
-    margin: 0 0 6px 0;
-    font-size: 18px;
-  }
-
-  .slot {
-    border: 1px dashed #555;
-    border-radius: 4px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .piece {
-    padding: 6px 4px;
-    border-radius: 4px;
-    cursor: grab;
-    font-size: 15px;
-    font-weight: bold;
-    text-align: center;
-    user-select: none;
-    width: 100%;
-    height: 100%;
-    box-sizing: border-box;
-    line-height: 1.3;
-  }
-
-  /* ▼ ドラッグ中の縦長バグ修正 */
-  .dragging {
-    position: fixed;
-    z-index: 9999;
-    pointer-events: none;
-    opacity: 0.9;
-    width: 150px;
-    height: 56px;   /* ← 高さ固定 */
-    font-size: 16px;
-  }
+/* ドラッグ中 */
+.dragging{position:fixed;z-index:9999;pointer-events:none;opacity:.9;width:150px;height:56px;font-size:16px}
 </style>
 </head>
 
@@ -172,7 +45,6 @@
 
 <h2>配置ボード（参加可のメンバーのみ）</h2>
 
-<!-- ▼ タブ + コピー先ボタン -->
 <div id="tabs">
   <button class="tab active" data-mode="gvg">GvG</button>
   <button class="tab" data-mode="xgvg">XGvG</button>
@@ -187,12 +59,12 @@
 
 <div id="loadArea">
   <label>読み込む JSON：</label><br>
-  <select id="loadSelect" style="margin-top:5px; width:260px; font-size:15px;"></select>
+  <select id="loadSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
   <button id="loadBtn">読み込み</button>
 
   <br><br>
   <label>編成一覧：</label><br>
-  <select id="formationSelect" style="margin-top:5px; width:260px; font-size:15px;"></select>
+  <select id="formationSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
   <button id="formationLoadBtn">編成ロード</button>
 
   <br><br>
@@ -202,325 +74,250 @@
   <div id="status"></div>
 </div>
 
-<!-- ▼ 未配属 -->
-<div id="unassigned">
-  <h3>未配属（0）</h3>
-</div>
+<div id="unassigned"><h3>未配属（0）</h3></div>
 
-<!-- ▼ チーム 2×3 -->
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-  <script>
-    const teamIds = ["A","B","C","D","E","F"];
-    document.write(
-      teamIds.map(id => `
-        <div class="zone" id="zone${id}">
-          <h3>チーム${id}（0）</h3>
-          ${"<div class='slot'></div>".repeat(15)}
-        </div>
-      `).join("")
-    );
-  </script>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+<script>
+const teamIds=["A","B","C","D","E","F"];
+document.write(teamIds.map(id=>`
+  <div class="zone" id="zone${id}">
+    <h3>チーム${id}（0）</h3>
+    ${"<div class='slot'></div>".repeat(15)}
+  </div>
+`).join(""));
+</script>
 </div>
 
 <script>
-$(function () {
+$(function(){
 
-  let currentMode = "gvg";
+/* ▼ タブ状態 */
+let currentMode="gvg";
 
-  $(".tab").on("click", function () {
-    $(".tab").removeClass("active");
-    $(this).addClass("active");
-    currentMode = $(this).data("mode");
-    loadFormationList();
-  });
+/* ▼ 職業色 */
+const jobColors={
+"ルーンナイト":"#b30000","ロイヤルガード":"#ff4d4d",
+"ウォーロック":"#0033cc","ソーサラー":"#4d79ff",
+"アークビショップ":"#bfa76a","修羅":"#a68b54",
+"レンジャー":"#006600","ミンストレル":"#33cc33","ワンダラー":"#33cc33",
+"ギロチンクロス":"#4d0066","シャドウチェイサー":"#9933cc",
+"ジェネティック":"#0099cc","メカニック":"#66d9ff",
+"ハイパーノービス":"#ffffff"
+};
 
-  const jobColors = {
-    "ルーンナイト": "#b30000",
-    "ロイヤルガード": "#ff4d4d",
-    "ウォーロック": "#0033cc",
-    "ソーサラー": "#4d79ff",
-    "アークビショップ": "#bfa76a",
-    "修羅": "#a68b54",
-    "レンジャー": "#006600",
-    "ミンストレル": "#33cc33",
-    "ワンダラー": "#33cc33",
-    "ギロチンクロス": "#4d0066",
-    "シャドウチェイサー": "#9933cc",
-    "ジェネティック": "#0099cc",
-    "メカニック": "#66d9ff",
-    "ハイパーノービス": "#ffffff"
-  };
+/* ▼ 略名 */
+const jobShort={
+"ルーンナイト":"ル","ロイヤルガード":"ロ","ウォーロック":"ウ","ソーサラー":"ソ",
+"アークビショップ":"ア","修羅":"修","レンジャー":"レ","ミンストレル":"ミ",
+"ワンダラー":"ワ","ギロチンクロス":"ギ","シャドウチェイサー":"シ",
+"ジェネティック":"ジ","メカニック":"メ","ハイパーノービス":"ノ"
+};
 
-  const jobShort = {
-    "ルーンナイト": "ル",
-    "ロイヤルガード": "ロ",
-    "ウォーロック": "ウ",
-    "ソーサラー": "ソ",
-    "アークビショップ": "ア",
-    "修羅": "修",
-    "レンジャー": "レ",
-    "ミンストレル": "ミ",
-    "ワンダラー": "ワ",
-    "ギロチンクロス": "ギ",
-    "シャドウチェイサー": "シ",
-    "ジェネティック": "ジ",
-    "メカニック": "メ",
-    "ハイパーノービス": "ノ"
-  };
+function getTextColor(bg){
+const r=parseInt(bg.substr(1,2),16),g=parseInt(bg.substr(3,2),16),b=parseInt(bg.substr(5,2),16);
+return (0.299*r+0.587*g+0.114*b)>150?"#000":"#fff";
+}
 
-  function getTextColor(bg) {
-    const r = parseInt(bg.substr(1,2), 16);
-    const g = parseInt(bg.substr(3,2), 16);
-    const b = parseInt(bg.substr(5,2), 16);
-    const luminance = (0.299*r + 0.587*g + 0.114*b);
-    return luminance > 150 ? "#000" : "#fff";
-  }
+const zones=["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"];
 
-  const jobOrder = Object.keys(jobShort);
-  const zones = ["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"];
+/* ▼ カウント更新 */
+function updateCounts(){
+$("#unassigned h3").text(`未配属（${$("#unassigned .piece").length}）`);
+zones.forEach(id=>{
+const c=$(`#${id} .slot .piece`).length;
+$(`#${id} h3`).text(`チーム${id.replace("zone","")}（${c}）`);
+});
+}
 
-  function updateCounts() {
-    $("#unassigned h3").text(`未配属（${$("#unassigned .piece").length}）`);
-    zones.forEach(id => {
-      const count = $("#" + id + " .slot .piece").length;
-      $("#" + id + " h3").text(`チーム${id.replace("zone","")}（${count}）`);
-    });
-  }
+/* ▼ メンバー一覧 */
+async function loadFileList(){
+const res=await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
+const files=await res.json();
+$("#loadSelect").empty().append(
+files.filter(f=>/^members-/i.test(f.name)).map(f=>`<option>${f.name}</option>`)
+);
+}
 
-  async function loadFileList() {
-    const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
-    const files = await res.json();
+/* ▼ メンバー読み込み */
+async function loadSelectedFile(){
+let file=$("#loadSelect").val().trim();
+const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
+const json=await res.json();
 
-    $("#loadSelect").empty().append(
-      files
-        .filter(f => /^members-/i.test(f.name))
-        .map(f => `<option value="${f.name}">${f.name}</option>`)
-    );
-  }
+$(".piece").remove();
 
-  async function loadSelectedFile() {
-    let file = $("#loadSelect").val();
-    file = file.trim().replace(/\u200B/g, "");
+json.members.filter(m=>m.join==="可").forEach(m=>{
+const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
+const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+enableDrag($p);
+$("#unassigned").append($p);
+});
 
-    const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
-    const json = await res.json();
+updateCounts();
+showStatus(file+" を読み込みました");
+}
 
-    $(".piece").remove();
+/* ▼ 編成一覧 */
+async function loadFormationList(){
+const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[currentMode];
+const res=await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
+const files=await res.json();
+$("#formationSelect").empty().append(
+files.filter(f=>f.name.startsWith(prefix)).map(f=>`<option>${f.name}</option>`)
+);
+}
 
-    json.members.filter(m => m.join === "可").forEach(m => {
-      const short = jobShort[m.job] || "？";
-      const bg = jobColors[m.job] || "#888";
-      const textColor = getTextColor(bg);
+/* ▼ 編成ロード */
+async function loadFormation(){
+let file=$("#formationSelect").val();
+const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
+const json=await res.json();
 
-      const $p = $(`<div class="piece" data-name="${m.name}" data-job="${m.job}"
-        style="background:${bg}; color:${textColor};">[${short}] ${m.name}</div>`);
+$(".piece").remove();
 
-      enableDrag($p);
-      $("#unassigned").append($p);
-    });
+const formation=json.formation||{};
+Object.keys(formation).forEach(zoneId=>{
+formation[zoneId].forEach(m=>{
+const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
+const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+enableDrag($p);
 
-    updateCounts();
-    showStatus(file + " を読み込みました");
-  }
+if(zoneId==="unassigned") $("#unassigned").append($p);
+else{
+const $slot=$(`#${zoneId} .slot`).filter((_,e)=>$(e).children().length===0).first();
+if($slot.length) $slot.append($p); else $("#unassigned").append($p);
+}
+});
+});
 
-  async function loadFormationList() {
-    const prefix = {
-      gvg: "formation-gvg",
-      xgvg: "formation-xgvg",
-      "60": "formation-60"
-    }[currentMode];
+updateCounts();
+showStatus(file+" を読み込みました");
+}
 
-    const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
-    const files = await res.json();
+/* ▼ ドラッグ */
+function enableDrag($p){
+let dragging=false;
 
-    $("#formationSelect").empty().append(
-      files
-        .filter(f => f.name.startsWith(prefix))
-        .map(f => `<option value="${f.name}">${f.name}</option>`)
-    );
-  }
+$p.on("mousedown touchstart",e=>{
+e.preventDefault(); dragging=true;
+const x=e.clientX||e.originalEvent.touches[0].clientX;
+const y=e.clientY||e.originalEvent.touches[0].clientY;
+$p.addClass("dragging"); movePiece($p,x,y);
+});
 
-  async function loadFormation() {
-    const file = $("#formationSelect").val();
-    const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
-    const json = await res.json();
+$(document).on("mousemove touchmove",e=>{
+if(!dragging)return;
+const x=e.clientX||e.originalEvent.touches[0].clientX;
+const y=e.clientY||e.originalEvent.touches[0].clientY;
+movePiece($p,x,y);
+});
 
-    $(".piece").remove();
+$(document).on("mouseup touchend",e=>{
+if(!dragging)return; dragging=false;
+const x=e.clientX||(e.originalEvent.changedTouches&&e.originalEvent.changedTouches[0].clientX);
+const y=e.clientY||(e.originalEvent.changedTouches&&e.originalEvent.changedTouches[0].clientY);
+const target=document.elementFromPoint(x,y);
+const $slot=$(target).closest(".slot");
+const $zone=$(target).closest(".zone");
+const $un=$(target).closest("#unassigned");
 
-    const formation = json.formation || {};
+$p.removeClass("dragging").css({left:"",top:""});
 
-    Object.keys(formation).forEach(zoneId => {
-      formation[zoneId].forEach(m => {
-        const short = jobShort[m.job] || "？";
-        const bg = jobColors[m.job] || "#888";
-        const textColor = getTextColor(bg);
+if($un.length) $("#unassigned").append($p);
+else if($slot.length){
+if($slot.children().length>0) $("#unassigned").append($slot.children().first());
+$slot.append($p);
+}
+else if($zone.length){
+const $empty=$zone.find(".slot").filter((_,e)=>$(e).children().length===0).first();
+if($empty.length) $empty.append($p); else $("#unassigned").append($p);
+}
+else $("#unassigned").append($p);
 
-        const $p = $(`<div class="piece" data-name="${m.name}" data-job="${m.job}"
-          style="background:${bg}; color:${textColor};">[${short}] ${m.name}</div>`);
+updateCounts();
+});
+}
 
-        enableDrag($p);
+function movePiece($el,x,y){$el.css({left:x-75+"px",top:y-24+"px"})}
 
-        if (zoneId === "unassigned") {
-          $("#unassigned").append($p);
-        } else {
-          const $slot = $("#" + zoneId).find(".slot").filter(function () {
-            return $(this).children().length === 0;
-          }).first();
+/* ▼ 未配属整列 */
+$("#sortBtn").on("click",()=>{
+const pieces=$("#unassigned .piece").get();
+pieces.sort((a,b)=>{
+const A=$(a).data("job"),B=$(b).data("job");
+return Object.keys(jobShort).indexOf(A)-Object.keys(jobShort).indexOf(B);
+});
+pieces.forEach(p=>$("#unassigned").append(p));
+});
 
-          if ($slot.length) $slot.append($p);
-          else $("#unassigned").append($p);
-        }
-      });
-    });
+/* ▼ 保存 */
+async function saveFormation(){
+const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[currentMode];
+const formation=getCurrentFormation();
 
-    updateCounts();
-    showStatus(file + " を読み込みました");
-  }
+await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
+method:"POST",headers:{"Content-Type":"application/json"},
+body:JSON.stringify({type:"formation",prefix,timestamp:new Date().toISOString(),formation})
+});
 
-  function enableDrag($p) {
-    let dragging = false;
+showStatus("編成を保存しました");
+}
 
-    $p.on("mousedown touchstart", function (e) {
-      e.preventDefault();
-      dragging = true;
+/* ▼ 現在の編成取得 */
+function getCurrentFormation(){
+const f={unassigned:[]};
+$("#unassigned .piece").each(function(){
+f.unassigned.push({name:$(this).data("name"),job:$(this).data("job")});
+});
+zones.forEach(z=>{
+f[z]=[];
+$(`#${z} .slot .piece`).each(function(){
+f[z].push({name:$(this).data("name"),job:$(this).data("job")});
+});
+});
+return f;
+}
 
-      const x = e.clientX || e.originalEvent.touches[0].clientX;
-      const y = e.clientY || e.originalEvent.touches[0].clientY;
+/* ▼ コピー */
+$(".copyBtn").on("click",function(){
+copyFormationTo($(this).data("target"));
+});
 
-      $p.addClass("dragging");
-      movePiece($p, x, y);
-    });
+async function copyFormationTo(target){
+const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[target];
+const formation=getCurrentFormation();
 
-    $(document).on("mousemove touchmove", function (e) {
-      if (!dragging) return;
+await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
+method:"POST",headers:{"Content-Type":"application/json"},
+body:JSON.stringify({type:"formation",prefix,timestamp:new Date().toISOString(),formation})
+});
 
-      const x = e.clientX || e.originalEvent.touches[0].clientX;
-      const y = e.clientY || e.originalEvent.touches[0].clientY;
+showStatus("コピーしました → "+target);
+}
 
-      movePiece($p, x, y);
-    });
+/* ▼ ステータス表示 */
+function showStatus(msg){
+$("#status").text(msg).fadeIn(150);
+setTimeout(()=>$("#status").fadeOut(300),2000);
+}
 
-    $(document).on("mouseup touchend", function (e) {
-      if (!dragging) return;
-      dragging = false;
+/* ▼ 初期ロード */
+loadFileList();
+loadFormationList();
 
-      const x = e.clientX || (e.originalEvent.changedTouches && e.originalEvent.changedTouches[0].clientX);
-      const y = e.clientY || (e.originalEvent.changedTouches && e.originalEvent.changedTouches[0].clientY);
+$("#loadBtn").on("click",loadSelectedFile);
+$("#formationLoadBtn").on("click",loadFormation);
+$("#saveBtn").on("click",saveFormation);
 
-      const target = document.elementFromPoint(x, y);
-      const $slot = $(target).closest(".slot");
-      const $zone = $(target).closest(".zone");
-      const $unassigned = $(target).closest("#unassigned");
+$(".tab").on("click",function(){
+$(".tab").removeClass("active");
+$(this).addClass("active");
+currentMode=$(this).data("mode");
+loadFormationList();
+});
 
-      $p.removeClass("dragging").css({ left: "", top: "" });
+});
+</script>
 
-      if ($unassigned.length) {
-        $("#unassigned").append($p);
-      }
-      else if ($slot.length) {
-        if ($slot.children().length > 0) {
-          $("#unassigned").append($slot.children().first());
-        }
-        $slot.append($p);
-      }
-      else if ($zone.length) {
-        const $empty = $zone.find(".slot").filter(function () {
-          return $(this).children().length === 0;
-        }).first();
-
-        if ($empty.length) $empty.append($p);
-        else $("#unassigned").append($p);
-      }
-      else {
-        $("#unassigned").append($p);
-      }
-
-      updateCounts();
-    });
-  }
-
-  function movePiece($el, x, y) {
-    $el.css({ left: x - 75 + "px", top: y - 24 + "px" });
-  }
-
-  function sortUnassigned() {
-    const pieces = $("#unassigned .piece").get();
-
-    pieces.sort((a, b) => {
-      const jobA = $(a).data("job");
-      const jobB = $(b).data("job");
-      return jobOrder.indexOf(jobA) - jobOrder.indexOf(jobB);
-    });
-
-    pieces.forEach(p => $("#unassigned").append(p));
-  }
-
-  $("#sortBtn").on("click", sortUnassigned);
-
-  function getCurrentFormation() {
-    const formation = { unassigned: [] };
-
-    $("#unassigned .piece").each(function () {
-      formation.unassigned.push({
-        name: $(this).data("name"),
-        job: $(this).data("job")
-      });
-    });
-
-    zones.forEach(zone => {
-      formation[zone] = [];
-      $("#" + zone + " .slot .piece").each(function () {
-        formation[zone].push({
-          name: $(this).data("name"),
-          job: $(this).data("job")
-        });
-      });
-    });
-
-    return formation;
-  }
-
-  async function copyFormationTo(targetMode) {
-    const prefix = {
-      gvg: "formation-gvg",
-      xgvg: "formation-xgvg",
-      "60": "formation-60"
-    }[targetMode];
-
-    const formation = getCurrentFormation();
-
-    await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "formation",
-        prefix,
-        timestamp: new Date().toISOString(),
-        formation
-      })
-    });
-
-    showStatus("編成を " + targetMode + " にコピーしました");
-  }
-
-  $(".copyBtn").on("click", function () {
-    const target = $(this).data("target");
-    copyFormationTo(target);
-  });
-
-  async function saveFormation() {
-    const prefix = {
-      gvg: "formation-gvg",
-      xgvg: "formation-xgvg",
-      "60": "formation-60"
-    }[currentMode];
-
-    const formation = getCurrentFormation();
-
-    await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "formation",
-        prefix,
-        timestamp: new Date().toISOString
+</body>
+</html>

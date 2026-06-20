@@ -155,8 +155,6 @@
 
 <!-- ▼ チーム 2×3 -->
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-
-  <!-- 15枠 × 6チーム -->
   <script>
     const teamIds = ["A","B","C","D","E","F"];
     document.write(
@@ -168,13 +166,12 @@
       `).join("")
     );
   </script>
-
 </div>
 
 <script>
 $(function () {
 
-  /* ▼ 目に優しいダークテーマ職色 */
+  /* ▼ 目に優しい黄色職 */
   const jobColors = {
     "ルーンナイト": "#b30000",
     "ロイヤルガード": "#ff4d4d",
@@ -182,8 +179,8 @@ $(function () {
     "ウォーロック": "#0033cc",
     "ソーサラー": "#4d79ff",
 
-    "アークビショップ": "#4a3f2b", // ダークゴールド
-    "修羅": "#3a2f1d",             // ダークブラウン
+    "アークビショップ": "#bfa76a", // 柔らかい金色
+    "修羅": "#a68b54",             // 黄土色
 
     "レンジャー": "#006600",
     "ミンストレル": "#33cc33",
@@ -198,11 +195,25 @@ $(function () {
     "ハイパーノービス": "#ffffff"
   };
 
-  const jobOrder = [
-    "ルーンナイト","ロイヤルガード","ウォーロック","ソーサラー","アークビショップ",
-    "修羅","レンジャー","ミンストレル","ワンダラー","ギロチンクロス",
-    "シャドウチェイサー","ジェネティック","メカニック","ハイパーノービス"
-  ];
+  /* ▼ 略名 */
+  const jobShort = {
+    "ルーンナイト": "ル",
+    "ロイヤルガード": "ロ",
+    "ウォーロック": "ウ",
+    "ソーサラー": "ソ",
+    "アークビショップ": "ア",
+    "修羅": "修",
+    "レンジャー": "レ",
+    "ミンストレル": "ミ",
+    "ワンダラー": "ワ",
+    "ギロチンクロス": "ギ",
+    "シャドウチェイサー": "シ",
+    "ジェネティック": "ジ",
+    "メカニック": "メ",
+    "ハイパーノービス": "ノ"
+  };
+
+  const jobOrder = Object.keys(jobShort);
 
   const zones = ["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"];
 
@@ -221,13 +232,10 @@ $(function () {
     const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
     const files = await res.json();
 
-    const list = files
-      .filter(f => f.name.startsWith("members-"))
-      .map(f => f.name)
-      .sort();
-
     $("#loadSelect").empty().append(
-      list.map(n => `<option value="${n}">${n}</option>`)
+      files
+        .filter(f => f.name.startsWith("members-"))
+        .map(f => `<option value="${f.name}">${f.name}</option>`)
     );
   }
 
@@ -240,7 +248,12 @@ $(function () {
     $(".piece").remove();
 
     json.members.filter(m => m.join === "可").forEach(m => {
-      const $p = $(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${jobColors[m.job] || "#888"}">${m.name}</div>`);
+      const short = jobShort[m.job] || "？";
+      const color = jobColors[m.job] || "#888";
+
+      const $p = $(`<div class="piece" data-name="${m.name}" data-job="${m.job}"
+        style="background:${color}; color:#000;">[${short}] ${m.name}</div>`);
+
       enableDrag($p);
       $("#unassigned").append($p);
     });
@@ -254,13 +267,10 @@ $(function () {
     const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
     const files = await res.json();
 
-    const list = files
-      .filter(f => f.name.startsWith("formation-"))
-      .map(f => f.name)
-      .sort();
-
     $("#formationSelect").empty().append(
-      list.map(n => `<option value="${n}">${n}</option>`)
+      files
+        .filter(f => f.name.startsWith("formation-"))
+        .map(f => `<option value="${f.name}">${f.name}</option>`)
     );
   }
 
@@ -276,7 +286,12 @@ $(function () {
 
     Object.keys(formation).forEach(zoneId => {
       formation[zoneId].forEach(m => {
-        const $p = $(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${jobColors[m.job] || "#888"}">${m.name}</div>`);
+        const short = jobShort[m.job] || "？";
+        const color = jobColors[m.job] || "#888";
+
+        const $p = $(`<div class="piece" data-name="${m.name}" data-job="${m.job}"
+          style="background:${color}; color:#000;">[${short}] ${m.name}</div>`);
+
         enableDrag($p);
 
         if (zoneId === "unassigned") {

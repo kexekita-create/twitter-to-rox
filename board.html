@@ -109,11 +109,11 @@ const r=parseInt(bg.substr(1,2),16),g=parseInt(bg.substr(3,2),16),b=parseInt(bg.
 return (0.299*r+0.587*g+0.114*b)>150?"#000":"#fff";
 }
 
-/* ▼ チームID（60vs60 のときだけ 8 チーム） */
+/* ▼ チームID（XGvG のときだけ 8 チーム） */
 function getTeamIds(){
-  return currentMode === "60"
-    ? ["A","B","C","D","E","F","G","H"]
-    : ["A","B","C","D","E","F"];
+  return currentMode === "xgvg"
+    ? ["A","B","C","D","E","F","G","H"]   // ← XGvG だけ 8 チーム
+    : ["A","B","C","D","E","F"];         // ← GvG / 60 は 6 チーム
 }
 
 /* ▼ チームゾーン生成 */
@@ -160,10 +160,7 @@ const json=await res.json();
 $(".piece").remove();
 
 json.members.filter(m=>m.join==="可").forEach(m=>{
-const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
-const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
-enableDrag($p);
-$("#unassigned").append($p);
+addPieceTo($("#unassigned"), m);
 });
 
 updateCounts();
@@ -191,22 +188,21 @@ $(".piece").remove();
 const formation=json.formation||{};
 const teamIds = getTeamIds();
 
-/* ▼ まず全チーム空にする */
+/* ▼ 全チーム初期化 */
 teamIds.forEach(id=>{
   $(`#zone${id} .slot`).empty();
 });
 
 /* ▼ 未配属 */
 if(formation.unassigned){
-  formation.unassigned.forEach(m=>{
-    addPieceTo($("#unassigned"), m);
-  });
+  formation.unassigned.forEach(m=>addPieceTo($("#unassigned"), m));
 }
 
 /* ▼ チーム（旧ファイルに無い G,H は無視） */
 teamIds.forEach(id=>{
-  if(!formation[`zone${id}`]) return;
-  formation[`zone${id}`].forEach(m=>{
+  const key = `zone${id}`;
+  if(!formation[key]) return;
+  formation[key].forEach(m=>{
     const $slot=$(`#zone${id} .slot`).filter((_,e)=>$(e).children().length===0).first();
     if($slot.length) addPieceTo($slot, m);
     else addPieceTo($("#unassigned"), m);
@@ -346,7 +342,7 @@ $(".tab").removeClass("active");
 $(this).addClass("active");
 currentMode=$(this).data("mode");
 
-renderZones();        // ← 60vs60 のときだけ 8 チームに再生成
+renderZones();        // ← XGvG のときだけ 8 チームに再生成
 loadFormationList();
 });
 

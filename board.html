@@ -76,17 +76,8 @@ h2{margin-bottom:10px;font-size:22px}
 
 <div id="unassigned"><h3>未配属（0）</h3></div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-<script>
-const teamIds=["A","B","C","D","E","F"];
-document.write(teamIds.map(id=>`
-  <div class="zone" id="zone${id}">
-    <h3>チーム${id}（0）</h3>
-    ${"<div class='slot'></div>".repeat(15)}
-  </div>
-`).join(""));
-</script>
-</div>
+<!-- チームゾーンを入れるコンテナ -->
+<div id="zonesContainer" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"></div>
 
 <script>
 $(function(){
@@ -118,14 +109,36 @@ const r=parseInt(bg.substr(1,2),16),g=parseInt(bg.substr(3,2),16),b=parseInt(bg.
 return (0.299*r+0.587*g+0.114*b)>150?"#000":"#fff";
 }
 
-const zones=["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"];
+/* ▼ チームID（60vs60 のときだけ 8 チーム） */
+function getTeamIds(){
+  return currentMode === "60"
+    ? ["A","B","C","D","E","F","G","H"]
+    : ["A","B","C","D","E","F"];
+}
+
+/* ▼ チームゾーン生成 */
+function renderZones(){
+  const teamIds = getTeamIds();
+  const container = $("#zonesContainer");
+  container.empty();
+
+  teamIds.forEach(id=>{
+    const zoneHtml = `
+      <div class="zone" id="zone${id}">
+        <h3>チーム${id}（0）</h3>
+        ${"<div class='slot'></div>".repeat(15)}
+      </div>
+    `;
+    container.append(zoneHtml);
+  });
+}
 
 /* ▼ カウント更新 */
 function updateCounts(){
 $("#unassigned h3").text(`未配属（${$("#unassigned .piece").length}）`);
-zones.forEach(id=>{
-const c=$(`#${id} .slot .piece`).length;
-$(`#${id} h3`).text(`チーム${id.replace("zone","")}（${c}）`);
+getTeamIds().forEach(id=>{
+const c=$(`#zone${id} .slot .piece`).length;
+$(`#zone${id} h3`).text(`チーム${id}（${c}）`);
 });
 }
 
@@ -167,7 +180,7 @@ files.filter(f=>f.name.startsWith(prefix)).map(f=>`<option>${f.name}</option>`)
 );
 }
 
-/* ▼ 編成ロード */
+/* ▼ 編成ロード（旧ファイルも対応） */
 async function loadFormation(){
 let file=$("#formationSelect").val();
 const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
@@ -176,22 +189,40 @@ const json=await res.json();
 $(".piece").remove();
 
 const formation=json.formation||{};
-Object.keys(formation).forEach(zoneId=>{
-formation[zoneId].forEach(m=>{
-const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
-const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
-enableDrag($p);
+const teamIds = getTeamIds();
 
-if(zoneId==="unassigned") $("#unassigned").append($p);
-else{
-const $slot=$(`#${zoneId} .slot`).filter((_,e)=>$(e).children().length===0).first();
-if($slot.length) $slot.append($p); else $("#unassigned").append($p);
-}
+/* ▼ まず全チーム空にする */
+teamIds.forEach(id=>{
+  $(`#zone${id} .slot`).empty();
 });
+
+/* ▼ 未配属 */
+if(formation.unassigned){
+  formation.unassigned.forEach(m=>{
+    addPieceTo($("#unassigned"), m);
+  });
+}
+
+/* ▼ チーム（旧ファイルに無い G,H は無視） */
+teamIds.forEach(id=>{
+  if(!formation[`zone${id}`]) return;
+  formation[`zone${id}`].forEach(m=>{
+    const $slot=$(`#zone${id} .slot`).filter((_,e)=>$(e).children().length===0).first();
+    if($slot.length) addPieceTo($slot, m);
+    else addPieceTo($("#unassigned"), m);
+  });
 });
 
 updateCounts();
 showStatus(file+" を読み込みました");
+}
+
+/* ▼ ピース生成 */
+function addPieceTo($target, m){
+const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
+const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+enableDrag($p);
+$target.append($p);
 }
 
 /* ▼ ドラッグ */
@@ -269,10 +300,10 @@ const f={unassigned:[]};
 $("#unassigned .piece").each(function(){
 f.unassigned.push({name:$(this).data("name"),job:$(this).data("job")});
 });
-zones.forEach(z=>{
-f[z]=[];
-$(`#${z} .slot .piece`).each(function(){
-f[z].push({name:$(this).data("name"),job:$(this).data("job")});
+getTeamIds().forEach(id=>{
+f[`zone${id}`]=[];
+$(`#zone${id} .slot .piece`).each(function(){
+f[`zone${id}`].push({name:$(this).data("name"),job:$(this).data("job")});
 });
 });
 return f;
@@ -302,6 +333,7 @@ setTimeout(()=>$("#status").fadeOut(300),2000);
 }
 
 /* ▼ 初期ロード */
+renderZones();
 loadFileList();
 loadFormationList();
 
@@ -313,6 +345,8 @@ $(".tab").on("click",function(){
 $(".tab").removeClass("active");
 $(this).addClass("active");
 currentMode=$(this).data("mode");
+
+renderZones();        // ← 60vs60 のときだけ 8 チームに再生成
 loadFormationList();
 });
 

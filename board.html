@@ -6,153 +6,74 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <style>
-body,html{
-  background:#1e1e1e;
-  color:#fff;
-  font-family:"Segoe UI";
-  margin:0;
-  padding:10px;
-}
+body,html{background:#1e1e1e;color:#fff;font-family:"Segoe UI";margin:0;padding:10px}
 h2{margin-bottom:10px;font-size:22px}
 
 /* タブ */
-#tabs{
-  display:flex;
-  gap:10px;
-  margin-bottom:10px;
-  align-items:center;
-}
-.tab{
-  padding:8px 16px;
-  background:#3a3a3a;
-  border:1px solid #666;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:16px;
-  color:#ccc;
-}
-.tab.active{
-  background:#0078ff;
-  border-color:#0078ff;
-  color:#fff;
-}
+#tabs{display:flex;gap:10px;margin-bottom:10px;align-items:center}
+.tab{padding:8px 16px;background:#3a3a3a;border:1px solid #666;border-radius:6px;cursor:pointer;font-size:16px;color:#ccc}
+.tab.active{background:#0078ff;border-color:#0078ff;color:#fff}
 
 /* 読み込みエリア 2カラム */
 #loadArea{
-  background:#2a2a2a;
-  padding:12px;
-  border-radius:6px;
-  border:1px solid #444;
-  margin-bottom:15px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
-  align-items:flex-start;
+  background:#2a2a2a;padding:12px;border-radius:6px;border:1px solid #444;
+  margin-bottom:15px;display:grid;grid-template-columns:1fr 1fr;gap:20px;
 }
 
-/* 左右の読み込みブロック */
+/* 読み込みブロック */
 .loadBlock{
-  background:#242424;
-  padding:10px;
-  border-radius:6px;
-  border:1px solid #555;
+  background:#242424;padding:10px;border-radius:6px;border:1px solid #555;
+  min-height:140px;
 }
 
 /* 保存ボタン右上 */
 #saveArea{
-  grid-column:1 / 3;
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-  margin-top:5px;
+  grid-column:1/3;display:flex;justify-content:flex-end;gap:10px;margin-top:5px;
 }
 
 button{
-  padding:8px 14px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  font-weight:bold;
-  font-size:15px;
+  padding:8px 14px;border:none;border-radius:6px;cursor:pointer;
+  font-weight:bold;font-size:15px;
 }
 #localSaveBtn{background:#0078ff;color:#fff}
 #serverSaveBtn{background:#00aa88;color:#fff}
 #localLoadBtn{background:#888;color:#fff}
 .loadBtn{background:#555;color:#fff}
-.deleteBtn{background:#ff4444;color:#fff}
+.deleteBtn{
+  background:#aa2222;color:#fff;font-size:13px;padding:6px 10px;
+  margin-left:10px;
+}
 
 #status{
-  margin-top:10px;
-  background:#2a2a2a;
-  padding:8px 12px;
-  border-radius:4px;
-  display:none;
-  font-size:15px;
+  margin-top:10px;background:#2a2a2a;padding:8px 12px;border-radius:4px;
+  display:none;font-size:15px;
 }
 
 /* 未配属 */
 #unassigned{
-  background:#2a2a2a;
-  border:2px solid #555;
-  border-radius:6px;
-  padding:6px;
-  margin-bottom:15px;
-  display:grid;
-  grid-template-columns:repeat(6,1fr);
-  gap:6px;
-  max-height:320px;
-  overflow-y:auto;
+  background:#2a2a2a;border:2px solid #555;border-radius:6px;padding:6px;
+  margin-bottom:15px;display:grid;grid-template-columns:repeat(6,1fr);
+  gap:6px;max-height:320px;overflow-y:auto;
 }
-#unassigned h3{
-  grid-column:span 6;
-  margin:0 0 6px 0;
-  font-size:18px;
-}
+#unassigned h3{grid-column:span 6;margin:0 0 6px 0;font-size:18px}
 
 /* チーム */
 .zone{
-  background:#2a2a2a;
-  border:2px solid #555;
-  border-radius:6px;
-  padding:6px;
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  grid-auto-rows:56px;
-  gap:6px;
-  min-height:180px;
+  background:#2a2a2a;border:2px solid #555;border-radius:6px;padding:6px;
+  display:grid;grid-template-columns:repeat(5,1fr);grid-auto-rows:56px;
+  gap:6px;min-height:180px;
 }
-.zone h3{
-  grid-column:span 5;
-  margin:0 0 6px 0;
-  font-size:18px;
-}
+.zone h3{grid-column:span 5;margin:0 0 6px 0;font-size:18px}
 
-.slot{
-  border:1px dashed #555;
-  border-radius:4px;
-  overflow:hidden;
-}
+.slot{border:1px dashed #555;border-radius:4px;overflow:hidden}
 .piece{
-  padding:6px 4px;
-  border-radius:4px;
-  cursor:grab;
-  font-size:15px;
-  font-weight:bold;
-  text-align:center;
-  user-select:none;
-  width:100%;
-  height:100%;
-  box-sizing:border-box;
-  line-height:1.3;
+  padding:6px 4px;border-radius:4px;cursor:grab;font-size:15px;
+  font-weight:bold;text-align:center;user-select:none;width:100%;height:100%;
+  box-sizing:border-box;line-height:1.3;
 }
 .dragging{
-  position:fixed;
-  z-index:9999;
-  pointer-events:none;
-  opacity:.9;
-  width:150px;
-  height:56px;
-  font-size:16px;
+  position:fixed;z-index:9999;pointer-events:none;opacity:.9;
+  width:150px;height:56px;font-size:16px;
 }
 </style>
 </head>
@@ -255,24 +176,6 @@ files.filter(f=>/^members-/i.test(f.name)).map(f=>`<option>${f.name}</option>`)
 );
 }
 
-async function loadSelectedFile(){
-let file=$("#loadSelect").val();
-const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
-const json=await res.json();
-
-$(".piece").remove();
-
-json.members.filter(m=>m.join==="可").forEach(m=>{
-const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
-const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
-enableDrag($p);
-$("#unassigned").append($p);
-});
-
-updateCounts();
-showStatus("サーバーから読み込みました");
-}
-
 async function loadFormationList(){
 const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[currentMode];
 const res=await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
@@ -282,65 +185,101 @@ files.filter(f=>f.name.startsWith(prefix)).map(f=>`<option>${f.name}</option>`)
 );
 }
 
-async function loadFormation(){
-let file=$("#formationSelect").val();
+async function loadSelectedFile(){
+let file=$("#loadSelect").val();
 const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
+if(!res.ok){showStatus("読み込み失敗: "+res.status,true);return;}
 const json=await res.json();
 
 $(".piece").remove();
-zones.forEach(id=>$("#"+id+" .slot").empty().append("<div class='slot'></div>".repeat(15)));
 
-json.formation.forEach(f=>{
-const bg=jobColors[f.job]||"#888",tc=getTextColor(bg),s=jobShort[f.job]||"？";
-const $p=$(`<div class="piece" data-name="${f.name}" data-job="${f.job}" style="background:${bg};color:${tc}">[${s}] ${f.name}</div>`);
+json.members.filter(m=>m.join==="可").forEach(m=>{
+const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
+const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" 
+style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
 enableDrag($p);
-if(f.team==="unassigned") $("#unassigned").append($p);
-else $(`#zone${f.team} .slot`).eq(f.index).append($p);
+$("#unassigned").append($p);
 });
 
 updateCounts();
 showStatus("サーバーから読み込みました");
 }
 
+async function loadFormation(){
+let file=$("#formationSelect").val();
+const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
+if(!res.ok){showStatus("読み込み失敗: "+res.status,true);return;}
+const json=await res.json();
+loadFormationFromJson(json);
+showStatus("サーバーから読み込みました");
+}
+
+function loadFormationFromJson(json){
+
+$(".piece").remove();
+zones.forEach(id=>{
+$("#"+id+" .slot").empty().append("<div class='slot'></div>".repeat(15));
+});
+
+if(json.formation.unassigned){
+json.formation.unassigned.forEach((m,i)=>{
+const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
+const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" 
+style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+enableDrag($p);
+$("#unassigned").append($p);
+});
+}
+
+["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"].forEach(zone=>{
+if(!json.formation[zone])return;
+json.formation[zone].forEach((m,i)=>{
+const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
+const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" 
+style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+enableDrag($p);
+const team=zone.replace("zone","");
+$(`#zone${team} .slot`).eq(i).append($p);
+});
+});
+
+updateCounts();
+}
+
 $("#loadBtn").on("click",loadSelectedFile);
 $("#formationLoadBtn").on("click",loadFormation);
 
-$("#membersDeleteBtn").on("click",async function(){
-const file=$("#loadSelect").val();
-if(!file)return showStatus("削除対象がありません",true);
-if(!confirm(file+" を削除しますか？\n削除前にバックアップを保存します。"))return;
+/* 削除ボタン安全化（2段階確認） */
+async function safeDelete(file){
+if(!confirm(file+" を削除しますか？"))return;
+if(!confirm("バックアップは保存しましたか？\n削除を実行します。"))return;
 
 const res1=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
 const json=await res1.json();
 downloadLocal("backup-"+file,json);
 
 const res2=await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
+method:"POST",headers:{"Content-Type":"application/json"},
 body:JSON.stringify({type:"delete",filename:file})
 });
 showStatus(await res2.text());
+}
+
+$("#membersDeleteBtn").on("click",async()=>{
+const file=$("#loadSelect").val();
+if(!file)return showStatus("削除対象がありません",true);
+await safeDelete(file);
 loadFileList();
 });
 
-$("#formationDeleteBtn").on("click",async function(){
+$("#formationDeleteBtn").on("click",async()=>{
 const file=$("#formationSelect").val();
 if(!file)return showStatus("削除対象がありません",true);
-if(!confirm(file+" を削除しますか？\n削除前にバックアップを保存します。"))return;
-
-const res1=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
-const json=await res1.json();
-downloadLocal("backup-"+file,json);
-
-const res2=await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({type:"delete",filename:file})
-});
-showStatus(await res2.text());
+await safeDelete(file);
 loadFormationList();
 });
 
+/* ドラッグ処理 */
 function enableDrag($p){
 $p.on("mousedown",function(e){
 const $clone=$(this).clone().addClass("dragging");
@@ -370,6 +309,7 @@ updateCounts();
 });
 }
 
+/* ローカル読み込み */
 $("#localLoadBtn").on("click",()=>$("#localLoadInput").click());
 
 $("#localLoadInput").on("change",function(e){
@@ -384,20 +324,7 @@ showStatus("ローカルから読み込みました");
 reader.readAsText(file);
 });
 
-function loadFormationFromJson(json){
-$(".piece").remove();
-zones.forEach(id=>$("#"+id+" .slot").empty().append("<div class='slot'></div>".repeat(15)));
-
-json.formation.forEach(f=>{
-const bg=jobColors[f.job]||"#888",tc=getTextColor(bg),s=jobShort[f.job]||"？";
-const $p=$(`<div class="piece" data-name="${f.name}" data-job="${f.job}" style="background:${bg};color:${tc}">[${s}] ${f.name}</div>`);
-enableDrag($p);
-if(f.team==="unassigned") $("#unassigned").append($p);
-else $(`#zone${f.team} .slot`).eq(f.index).append($p);
-});
-updateCounts();
-}
-
+/* ローカル保存 */
 function downloadLocal(filename,json){
 const blob=new Blob([JSON.stringify(json,null,2)],{type:"application/json"});
 const url=URL.createObjectURL(blob);
@@ -413,21 +340,32 @@ downloadLocal(filename,data);
 showStatus("ローカルに保存しました");
 });
 
+/* A形式で保存 */
 function collectFormationData(){
 const date=new Date().toISOString().slice(0,10);
 const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[currentMode];
 
-let formation=[];
+let formation={
+unassigned:[],
+zoneA:[],zoneB:[],zoneC:[],zoneD:[],zoneE:[],zoneF:[]
+};
 
-$("#unassigned .piece").each(function(i){
-formation.push({team:"unassigned",index:i,name:$(this).data("name"),job:$(this).data("job")});
+$("#unassigned .piece").each(function(){
+formation.unassigned.push({
+name:$(this).data("name"),
+job:$(this).data("job")
+});
 });
 
 zones.forEach(id=>{
-$(`#${id} .slot`).each(function(i){
+const team=id.replace("zone","");
+$(`#${id} .slot`).each(function(){
 const $p=$(this).find(".piece");
 if($p.length){
-formation.push({team:id.replace("zone",""),index:i,name:$p.data("name"),job:$p.data("job")});
+formation[id].push({
+name:$p.data("name"),
+job:$p.data("job")
+});
 }
 });
 });
@@ -435,17 +373,18 @@ formation.push({team:id.replace("zone",""),index:i,name:$p.data("name"),job:$p.d
 return {type:"formation",prefix,date,formation};
 }
 
+/* サーバー保存 */
 $("#serverSaveBtn").on("click",async function(){
 const data=collectFormationData();
 const res=await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
+method:"POST",headers:{"Content-Type":"application/json"},
 body:JSON.stringify(data)
 });
 showStatus(await res.text());
 loadFormationList();
 });
 
+/* タブ切り替え */
 $(".tab").on("click",function(){
 $(".tab").removeClass("active");
 $(this).addClass("active");
@@ -453,6 +392,7 @@ currentMode=$(this).data("mode");
 loadFormationList();
 });
 
+/* 初期ロード */
 loadFileList();
 loadFormationList();
 

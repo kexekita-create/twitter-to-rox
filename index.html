@@ -13,95 +13,37 @@
     margin: 0;
     padding: 20px;
   }
-  h2 {
-    margin-bottom: 10px;
-    color: #fff;
-  }
-  #headerArea {
+  h2 { margin-bottom: 10px; color: #fff; }
+  #headerArea, #loadArea {
     background: #2a2a2a;
     padding: 12px;
     border-radius: 6px;
-    width: 320px;
-    margin-bottom: 15px;
-    border: 1px solid #444;
-  }
-  input[type="date"] {
-    background: #333;
-    color: #fff;
-    border: 1px solid #555;
-    padding: 6px;
-    border-radius: 4px;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-  th {
-    background: #333;
-    padding: 8px;
-    border-bottom: 2px solid #555;
-  }
-  td {
-    padding: 6px;
-    border-bottom: 1px solid #444;
-  }
-  input[type="text"], select {
-    width: 100%;
-    padding: 5px;
-    background: #2a2a2a;
-    color: #fff;
-    border: 1px solid #555;
-    border-radius: 4px;
-  }
-  tr:hover {
-    background: #2f2f2f;
-    transition: 0.2s;
-  }
-  #saveBtn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #0078ff;
-    color: white;
-    padding: 10px 18px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    box-shadow: 0 0 10px #000;
-  }
-  #saveBtn:hover {
-    background: #3399ff;
-  }
-  #status {
-    position: fixed;
-    top: 60px;
-    right: 20px;
-    background: #2a2a2a;
-    color: #fff;
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    display: none;
-  }
-  #loadArea {
-    background: #2a2a2a;
-    padding: 10px;
-    border-radius: 6px;
     width: 350px;
-    border: 1px solid #444;
     margin-bottom: 15px;
+    border: 1px solid #444;
   }
-  #deleteBtn {
-    background: #ff4444;
-    color: white;
-    padding: 6px 12px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    margin-left: 5px;
+  input[type="date"], input[type="text"], select {
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    padding: 6px;
+    border-radius: 4px;
+  }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th { background: #333; padding: 8px; border-bottom: 2px solid #555; }
+  td { padding: 6px; border-bottom: 1px solid #444; }
+  tr:hover { background: #2f2f2f; transition: 0.2s; }
+  #saveBtn {
+    position: fixed; top: 20px; right: 20px;
+    background: #0078ff; color: white;
+    padding: 10px 18px; border: none; border-radius: 6px;
+    cursor: pointer; font-weight: bold; box-shadow: 0 0 10px #000;
+  }
+  #deleteBtn { background: #ff4444; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+  #status {
+    position: fixed; top: 60px; right: 20px;
+    background: #2a2a2a; color: #fff;
+    padding: 6px 10px; border-radius: 4px; font-size: 12px; display: none;
   }
 </style>
 </head>
@@ -149,29 +91,28 @@ $(function () {
   const $tbody = $("#memberTable tbody");
   for (let i = 1; i <= 100; i++) {
     const $tr = $("<tr></tr>");
-    $tr.append($("<td></td>").text(i));
+    $tr.append(`<td>${i}</td>`);
+    $tr.append(`<td><input type="text" name="name_${i}"></td>`);
 
-    const $name = $("<input>").attr("type", "text").attr("name", "name_" + i);
-    $tr.append($("<td></td>").append($name));
+    const jobSel = $("<select>").attr("name", "job_" + i);
+    jobs.forEach(j => jobSel.append(`<option value="${j}">${j}</option>`));
+    $tr.append($("<td>").append(jobSel));
 
-    const $job = $("<select></select>").attr("name", "job_" + i);
-    jobs.forEach(j => $job.append($("<option></option>").val(j).text(j)));
-    $tr.append($("<td></td>").append($job));
-
-    const $join = $("<select></select>").attr("name", "join_" + i);
-    $join.append("<option value='可'>可</option>");
-    $join.append("<option value='否'>否</option>");
-    $tr.append($("<td></td>").append($join));
+    const joinSel = $(`<select name="join_${i}">
+      <option value="可">可</option>
+      <option value="否">否</option>
+    </select>`);
+    $tr.append($("<td>").append(joinSel));
 
     $tbody.append($tr);
   }
 
-  function showStatus(msg, isError) {
-    const $s = $("#status");
-    $s.text(msg)
-      .css("background", isError ? "#a33" : "#2a2a2a")
+  function showStatus(msg, error) {
+    $("#status")
+      .text(msg)
+      .css("background", error ? "#a33" : "#2a2a2a")
       .fadeIn(150);
-    setTimeout(() => $s.fadeOut(300), 3000);
+    setTimeout(() => $("#status").fadeOut(300), 3000);
   }
 
   async function saveToGitHub(data) {
@@ -180,8 +121,7 @@ $(function () {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     });
-
-    if (!res.ok) throw new Error("Worker error: " + res.status);
+    if (!res.ok) throw new Error(await res.text());
   }
 
   $("#saveBtn").on("click", async function () {
@@ -192,16 +132,15 @@ $(function () {
     };
 
     $("#memberTable tbody tr").each(function () {
-      const row = {
+      data.members.push({
         no: $(this).find("td:eq(0)").text(),
         name: $(this).find("input").val(),
         job: $(this).find("select[name^='job']").val(),
         join: $(this).find("select[name^='join']").val()
-      };
-      data.members.push(row);
+      });
     });
 
-    showStatus("Worker に送信中...");
+    showStatus("保存中...");
 
     try {
       await saveToGitHub(data);
@@ -212,31 +151,18 @@ $(function () {
   });
 
   async function loadFileList() {
-    const owner = "kexekita-create";
-    const repo  = "twitter-to-rox";
-
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/data`);
-    if (!res.ok) return;
-
+    const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
     const files = await res.json();
-    const list = files
-      .filter(f => f.name.startsWith("members-") && f.name.endsWith(".json"))
-      .map(f => f.name)
-      .sort();
 
-    const $sel = $("#loadSelect");
-    $sel.empty();
-    list.forEach(name => {
-      $sel.append(`<option value="${name}">${name}</option>`);
-    });
+    $("#loadSelect").empty();
+    files
+      .filter(f => f.name.startsWith("members-"))
+      .forEach(f => $("#loadSelect").append(`<option>${f.name}</option>`));
   }
 
   async function loadSelectedFile() {
-    const owner = "kexekita-create";
-    const repo  = "twitter-to-rox";
     const file = $("#loadSelect").val();
-
-    const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/data/${file}`);
+    const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
     const json = await res.json();
 
     $("#eventDate").val(json.date);
@@ -253,29 +179,36 @@ $(function () {
 
   $("#loadBtn").on("click", loadSelectedFile);
 
-  // ▼ 参加者一覧の削除機能
+  // ▼ 削除機能（動作保証版）
   $("#deleteBtn").on("click", async function () {
     const file = $("#loadSelect").val();
     if (!file) return showStatus("削除対象がありません", true);
 
     if (!confirm(file + " を削除しますか？")) return;
 
-    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "delete",
-        filename: file
-      })
-    });
+    try {
+      const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "delete",
+          filename: file
+        })
+      });
 
-    const text = await res.text();
-    showStatus(text);
+      const text = await res.text();
+      showStatus(text);
 
-    loadFileList();
+      await loadFileList();
+    } catch (e) {
+      showStatus("削除失敗: " + e.message, true);
+    }
   });
 
   loadFileList();
 
 });
 </script>
+
+</body>
+</html>

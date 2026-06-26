@@ -168,43 +168,7 @@ $(`#${id} h3`).text(`チーム${id.replace("zone","")}（${c}）`);
 });
 }
 
-async function loadFileList(){
-const res=await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
-const files=await res.json();
-$("#loadSelect").empty().append(
-files.filter(f=>/^members-/i.test(f.name)).map(f=>`<option>${f.name}</option>`)
-);
-}
-
-async function loadFormationList(){
-const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[currentMode];
-const res=await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
-const files=await res.json();
-$("#formationSelect").empty().append(
-files.filter(f=>f.name.startsWith(prefix)).map(f=>`<option>${f.name}</option>`)
-);
-}
-
-async function loadSelectedFile(){
-let file=$("#loadSelect").val();
-const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
-if(!res.ok){showStatus("読み込み失敗: "+res.status,true);return;}
-const json=await res.json();
-
-$(".piece").remove();
-
-json.members.filter(m=>m.join==="可").forEach(m=>{
-const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
-const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" 
-style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
-enableDrag($p);
-$("#unassigned").append($p);
-});
-
-updateCounts();
-showStatus("サーバーから読み込みました");
-}
-
+/* サーバーの JSON をそのまま読む */
 async function loadFormation(){
 let file=$("#formationSelect").val();
 const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
@@ -214,6 +178,7 @@ loadFormationFromJson(json);
 showStatus("サーバーから読み込みました");
 }
 
+/* 完全クリアしてから描画（混ざり防止） */
 function loadFormationFromJson(json){
 
 $(".piece").remove();
@@ -221,18 +186,17 @@ zones.forEach(id=>{
 $("#"+id+" .slot").empty().append("<div class='slot'></div>".repeat(15));
 });
 
-if(json.formation.unassigned){
-json.formation.unassigned.forEach((m,i)=>{
+/* unassigned */
+json.formation.unassigned.forEach(m=>{
 const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
 const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" 
 style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
 enableDrag($p);
 $("#unassigned").append($p);
 });
-}
 
+/* zoneA〜F */
 ["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"].forEach(zone=>{
-if(!json.formation[zone])return;
 json.formation[zone].forEach((m,i)=>{
 const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
 const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" 
@@ -245,39 +209,6 @@ $(`#zone${team} .slot`).eq(i).append($p);
 
 updateCounts();
 }
-
-$("#loadBtn").on("click",loadSelectedFile);
-$("#formationLoadBtn").on("click",loadFormation);
-
-/* 削除ボタン安全化（2段階確認） */
-async function safeDelete(file){
-if(!confirm(file+" を削除しますか？"))return;
-if(!confirm("バックアップは保存しましたか？\n削除を実行します。"))return;
-
-const res1=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
-const json=await res1.json();
-downloadLocal("backup-"+file,json);
-
-const res2=await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
-method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({type:"delete",filename:file})
-});
-showStatus(await res2.text());
-}
-
-$("#membersDeleteBtn").on("click",async()=>{
-const file=$("#loadSelect").val();
-if(!file)return showStatus("削除対象がありません",true);
-await safeDelete(file);
-loadFileList();
-});
-
-$("#formationDeleteBtn").on("click",async()=>{
-const file=$("#formationSelect").val();
-if(!file)return showStatus("削除対象がありません",true);
-await safeDelete(file);
-loadFormationList();
-});
 
 /* ドラッグ処理 */
 function enableDrag($p){
@@ -309,40 +240,9 @@ updateCounts();
 });
 }
 
-/* ローカル読み込み */
-$("#localLoadBtn").on("click",()=>$("#localLoadInput").click());
-
-$("#localLoadInput").on("change",function(e){
-const file=e.target.files[0];
-if(!file)return;
-const reader=new FileReader();
-reader.onload=function(){
-const json=JSON.parse(reader.result);
-loadFormationFromJson(json);
-showStatus("ローカルから読み込みました");
-};
-reader.readAsText(file);
-});
-
-/* ローカル保存 */
-function downloadLocal(filename,json){
-const blob=new Blob([JSON.stringify(json,null,2)],{type:"application/json"});
-const url=URL.createObjectURL(blob);
-const a=document.createElement("a");
-a.href=url;a.download=filename;a.click();
-URL.revokeObjectURL(url);
-}
-
-$("#localSaveBtn").on("click",function(){
-const data=collectFormationData();
-const filename=`${data.prefix}-${data.date}.json`;
-downloadLocal(filename,data);
-showStatus("ローカルに保存しました");
-});
-
-/* A形式で保存 */
+/* 保存（サーバー JSON と同じ形式） */
 function collectFormationData(){
-const date=new Date().toISOString().slice(0,10);
+const date=new Date().toISOString();
 const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[currentMode];
 
 let formation={
@@ -370,7 +270,7 @@ job:$p.data("job")
 });
 });
 
-return {type:"formation",prefix,date,formation};
+return {type:"formation",prefix,timestamp:date,formation};
 }
 
 /* サーバー保存 */
@@ -383,6 +283,106 @@ body:JSON.stringify(data)
 showStatus(await res.text());
 loadFormationList();
 });
+
+/* 参加者読み込み */
+async function loadSelectedFile(){
+let file=$("#loadSelect").val();
+const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
+if(!res.ok){showStatus("読み込み失敗: "+res.status,true);return;}
+const json=await res.json();
+
+$(".piece").remove();
+
+json.members.filter(m=>m.join==="可").forEach(m=>{
+const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
+const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" 
+style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+enableDrag($p);
+$("#unassigned").append($p);
+});
+
+updateCounts();
+showStatus("サーバーから読み込みました");
+}
+
+/* 削除（安全化） */
+async function safeDelete(file){
+if(!confirm(file+" を削除しますか？"))return;
+if(!confirm("バックアップは保存しましたか？\n削除を実行します。"))return;
+
+const res1=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
+const json=await res1.json();
+downloadLocal("backup-"+file,json);
+
+const res2=await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
+method:"POST",headers:{"Content-Type":"application/json"},
+body:JSON.stringify({type:"delete",filename:file})
+});
+showStatus(await res2.text());
+}
+
+$("#membersDeleteBtn").on("click",async()=>{
+const file=$("#loadSelect").val();
+if(!file)return showStatus("削除対象がありません",true);
+await safeDelete(file);
+loadFileList();
+});
+
+$("#formationDeleteBtn").on("click",async()=>{
+const file=$("#formationSelect").val();
+if(!file)return showStatus("削除対象がありません",true);
+await safeDelete(file);
+loadFormationList();
+});
+
+/* ローカル読み込み */
+$("#localLoadBtn").on("click",()=>$("#localLoadInput").click());
+
+$("#localLoadInput").on("change",function(e){
+const file=e.target.files[0];
+if(!file)return;
+const reader=new FileReader();
+reader.onload=function(){
+const json=JSON.parse(reader.result);
+loadFormationFromJson(json);
+showStatus("ローカルから読み込みました");
+};
+reader.readAsText(file);
+});
+
+/* ローカル保存 */
+function downloadLocal(filename,json){
+const blob=new Blob([JSON.stringify(json,null,2)],{type:"application/json"});
+const url=URL.createObjectURL(blob);
+const a=document.createElement("a");
+a.href=url;a.download=filename;a.click();
+URL.revokeObjectURL(url);
+}
+
+$("#localSaveBtn").on("click",function(){
+const data=collectFormationData();
+const filename=`${data.prefix}-${data.timestamp}.json`;
+downloadLocal(filename,data);
+showStatus("ローカルに保存しました");
+});
+
+/* リスト読み込み */
+async function loadFileList(){
+const res=await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
+const files=await res.json();
+$("#loadSelect").empty().append(
+files.filter(f=>/^members-/i.test(f.name)).map(f=>`<option>${f.name}</option>`)
+);
+}
+
+async function loadFormationList(){
+const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[currentMode];
+const res=await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
+const files=await res.json();
+$("#formationSelect").empty().append(
+files.filter(f=>f.name.startsWith(prefix)).map(f=>`<option>${f.name}</option>`)
+);
+}
 
 /* タブ切り替え */
 $(".tab").on("click",function(){

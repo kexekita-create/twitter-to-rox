@@ -8,35 +8,22 @@
 <style>
 body,html{background:#1e1e1e;color:#fff;font-family:"Segoe UI";margin:0;padding:10px}
 h2{margin-bottom:10px;font-size:22px}
-
-/* タブ */
 #tabs{display:flex;gap:10px;margin-bottom:10px;align-items:center}
 .tab{padding:8px 16px;background:#3a3a3a;border:1px solid #666;border-radius:6px;cursor:pointer;font-size:16px;color:#ccc}
 .tab.active{background:#0078ff;border-color:#0078ff;color:#fff}
-
-/* コピー先 */
 #copyButtons{display:flex;gap:8px;margin-left:20px}
 .copyBtn{padding:6px 12px;background:#444;border:1px solid #777;border-radius:6px;cursor:pointer;font-size:14px;color:#ddd}
 .copyBtn:hover{background:#555}
-
-/* 読み込みエリア */
 #loadArea{margin-bottom:10px;background:#2a2a2a;padding:12px;border-radius:6px;width:100%;max-width:520px;border:1px solid #444;font-size:16px}
-#saveBtn,#sortBtn,#loadBtn,#formationLoadBtn{background:#0078ff;color:#fff;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;margin-top:8px;margin-right:8px;font-size:15px}
+#saveBtn,#sortBtn,#loadBtn,#formationLoadBtn,#formationDeleteBtn{background:#0078ff;color:#fff;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;margin-top:8px;margin-right:8px;font-size:15px}
+#formationDeleteBtn{background:#ff4444}
 #status{margin-top:10px;background:#2a2a2a;padding:8px 12px;border-radius:4px;display:none;font-size:15px}
-
-/* 未配属 */
 #unassigned{background:#2a2a2a;border:2px solid #555;border-radius:6px;padding:6px;margin-bottom:15px;display:grid;grid-template-columns:repeat(6,1fr);gap:6px;max-height:320px;overflow-y:auto}
 #unassigned h3{grid-column:span 6;margin:0 0 6px 0;font-size:18px}
-
-/* チーム */
 .zone{background:#2a2a2a;border:2px solid #555;border-radius:6px;padding:6px;display:grid;grid-template-columns:repeat(5,1fr);grid-auto-rows:56px;gap:6px;min-height:180px}
 .zone h3{grid-column:span 5;margin:0 0 6px 0;font-size:18px}
 .slot{border:1px dashed #555;border-radius:4px;overflow:hidden}
-
-/* ピース */
 .piece{padding:6px 4px;border-radius:4px;cursor:grab;font-size:15px;font-weight:bold;text-align:center;user-select:none;width:100%;height:100%;box-sizing:border-box;line-height:1.3}
-
-/* ドラッグ中 */
 .dragging{position:fixed;z-index:9999;pointer-events:none;opacity:.9;width:150px;height:56px;font-size:16px}
 </style>
 </head>
@@ -66,6 +53,7 @@ h2{margin-bottom:10px;font-size:22px}
   <label>編成一覧：</label><br>
   <select id="formationSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
   <button id="formationLoadBtn">編成ロード</button>
+  <button id="formationDeleteBtn">削除</button>
 
   <br><br>
   <button id="sortBtn">未配属を職業ごとに整列</button>
@@ -76,16 +64,23 @@ h2{margin-bottom:10px;font-size:22px}
 
 <div id="unassigned"><h3>未配属（0）</h3></div>
 
-<!-- チームゾーンを入れるコンテナ -->
-<div id="zonesContainer" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+<script>
+const teamIds=["A","B","C","D","E","F"];
+document.write(teamIds.map(id=>`
+  <div class="zone" id="zone${id}">
+    <h3>チーム${id}（0）</h3>
+    ${"<div class='slot'></div>".repeat(15)}
+  </div>
+`).join(""));
+</script>
+</div>
 
 <script>
 $(function(){
 
-/* ▼ タブ状態 */
 let currentMode="gvg";
 
-/* ▼ 職業色 */
 const jobColors={
 "ルーンナイト":"#b30000","ロイヤルガード":"#ff4d4d",
 "ウォーロック":"#0033cc","ソーサラー":"#4d79ff",
@@ -96,7 +91,6 @@ const jobColors={
 "ハイパーノービス":"#ffffff"
 };
 
-/* ▼ 略名 */
 const jobShort={
 "ルーンナイト":"ル","ロイヤルガード":"ロ","ウォーロック":"ウ","ソーサラー":"ソ",
 "アークビショップ":"ア","修羅":"修","レンジャー":"レ","ミンストレル":"ミ",
@@ -109,40 +103,16 @@ const r=parseInt(bg.substr(1,2),16),g=parseInt(bg.substr(3,2),16),b=parseInt(bg.
 return (0.299*r+0.587*g+0.114*b)>150?"#000":"#fff";
 }
 
-/* ▼ チームID（XGvG のときだけ 8 チーム） */
-function getTeamIds(){
-  return currentMode === "xgvg"
-    ? ["A","B","C","D","E","F","G","H"]   // ← XGvG だけ 8 チーム
-    : ["A","B","C","D","E","F"];         // ← GvG / 60 は 6 チーム
-}
+const zones=["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"];
 
-/* ▼ チームゾーン生成 */
-function renderZones(){
-  const teamIds = getTeamIds();
-  const container = $("#zonesContainer");
-  container.empty();
-
-  teamIds.forEach(id=>{
-    const zoneHtml = `
-      <div class="zone" id="zone${id}">
-        <h3>チーム${id}（0）</h3>
-        ${"<div class='slot'></div>".repeat(15)}
-      </div>
-    `;
-    container.append(zoneHtml);
-  });
-}
-
-/* ▼ カウント更新 */
 function updateCounts(){
 $("#unassigned h3").text(`未配属（${$("#unassigned .piece").length}）`);
-getTeamIds().forEach(id=>{
-const c=$(`#zone${id} .slot .piece`).length;
-$(`#zone${id} h3`).text(`チーム${id}（${c}）`);
+zones.forEach(id=>{
+const c=$(`#${id} .slot .piece`).length;
+$(`#${id} h3`).text(`チーム${id.replace("zone","")}（${c}）`);
 });
 }
 
-/* ▼ メンバー一覧 */
 async function loadFileList(){
 const res=await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
 const files=await res.json();
@@ -151,7 +121,6 @@ files.filter(f=>/^members-/i.test(f.name)).map(f=>`<option>${f.name}</option>`)
 );
 }
 
-/* ▼ メンバー読み込み */
 async function loadSelectedFile(){
 let file=$("#loadSelect").val().trim();
 const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
@@ -160,14 +129,16 @@ const json=await res.json();
 $(".piece").remove();
 
 json.members.filter(m=>m.join==="可").forEach(m=>{
-addPieceTo($("#unassigned"), m);
+const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
+const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+enableDrag($p);
+$("#unassigned").append($p);
 });
 
 updateCounts();
 showStatus(file+" を読み込みました");
 }
 
-/* ▼ 編成一覧 */
 async function loadFormationList(){
 const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[currentMode];
 const res=await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
@@ -177,7 +148,6 @@ files.filter(f=>f.name.startsWith(prefix)).map(f=>`<option>${f.name}</option>`)
 );
 }
 
-/* ▼ 編成ロード（旧ファイルも対応） */
 async function loadFormation(){
 let file=$("#formationSelect").val();
 const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
@@ -186,42 +156,24 @@ const json=await res.json();
 $(".piece").remove();
 
 const formation=json.formation||{};
-const teamIds = getTeamIds();
+Object.keys(formation).forEach(zoneId=>{
+formation[zoneId].forEach(m=>{
+const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
+const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+enableDrag($p);
 
-/* ▼ 全チーム初期化 */
-teamIds.forEach(id=>{
-  $(`#zone${id} .slot`).empty();
-});
-
-/* ▼ 未配属 */
-if(formation.unassigned){
-  formation.unassigned.forEach(m=>addPieceTo($("#unassigned"), m));
+if(zoneId==="unassigned") $("#unassigned").append($p);
+else{
+const $slot=$(`#${zoneId} .slot`).filter((_,e)=>$(e).children().length===0).first();
+if($slot.length) $slot.append($p); else $("#unassigned").append($p);
 }
-
-/* ▼ チーム（旧ファイルに無い G,H は無視） */
-teamIds.forEach(id=>{
-  const key = `zone${id}`;
-  if(!formation[key]) return;
-  formation[key].forEach(m=>{
-    const $slot=$(`#zone${id} .slot`).filter((_,e)=>$(e).children().length===0).first();
-    if($slot.length) addPieceTo($slot, m);
-    else addPieceTo($("#unassigned"), m);
-  });
+});
 });
 
 updateCounts();
 showStatus(file+" を読み込みました");
 }
 
-/* ▼ ピース生成 */
-function addPieceTo($target, m){
-const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
-const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
-enableDrag($p);
-$target.append($p);
-}
-
-/* ▼ ドラッグ */
 function enableDrag($p){
 let dragging=false;
 
@@ -267,7 +219,6 @@ updateCounts();
 
 function movePiece($el,x,y){$el.css({left:x-75+"px",top:y-24+"px"})}
 
-/* ▼ 未配属整列 */
 $("#sortBtn").on("click",()=>{
 const pieces=$("#unassigned .piece").get();
 pieces.sort((a,b)=>{
@@ -277,7 +228,6 @@ return Object.keys(jobShort).indexOf(A)-Object.keys(jobShort).indexOf(B);
 pieces.forEach(p=>$("#unassigned").append(p));
 });
 
-/* ▼ 保存 */
 async function saveFormation(){
 const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[currentMode];
 const formation=getCurrentFormation();
@@ -290,22 +240,20 @@ body:JSON.stringify({type:"formation",prefix,timestamp:new Date().toISOString(),
 showStatus("編成を保存しました");
 }
 
-/* ▼ 現在の編成取得 */
 function getCurrentFormation(){
 const f={unassigned:[]};
 $("#unassigned .piece").each(function(){
 f.unassigned.push({name:$(this).data("name"),job:$(this).data("job")});
 });
-getTeamIds().forEach(id=>{
-f[`zone${id}`]=[];
-$(`#zone${id} .slot .piece`).each(function(){
-f[`zone${id}`].push({name:$(this).data("name"),job:$(this).data("job")});
+zones.forEach(z=>{
+f[z]=[];
+$(`#${z} .slot .piece`).each(function(){
+f[z].push({name:$(this).data("name"),job:$(this).data("job")});
 });
 });
 return f;
 }
 
-/* ▼ コピー */
 $(".copyBtn").on("click",function(){
 copyFormationTo($(this).data("target"));
 });
@@ -322,14 +270,11 @@ body:JSON.stringify({type:"formation",prefix,timestamp:new Date().toISOString(),
 showStatus("コピーしました → "+target);
 }
 
-/* ▼ ステータス表示 */
 function showStatus(msg){
 $("#status").text(msg).fadeIn(150);
 setTimeout(()=>$("#status").fadeOut(300),2000);
 }
 
-/* ▼ 初期ロード */
-renderZones();
 loadFileList();
 loadFormationList();
 
@@ -341,9 +286,32 @@ $(".tab").on("click",function(){
 $(".tab").removeClass("active");
 $(this).addClass("active");
 currentMode=$(this).data("mode");
-
-renderZones();        // ← XGvG のときだけ 8 チームに再生成
 loadFormationList();
+});
+
+/* ▼ 削除機能 */
+$("#formationDeleteBtn").on("click", async function () {
+  const file = $("#formationSelect").val();
+  if (!file) {
+    showStatus("削除するファイルがありません");
+    return;
+  }
+
+  if (!confirm(file + " を削除しますか？")) return;
+
+  const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: "delete",
+      filename: file
+    })
+  });
+
+  const text = await res.text();
+  showStatus(text);
+
+  loadFormationList();
 });
 
 });

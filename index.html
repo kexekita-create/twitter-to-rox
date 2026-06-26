@@ -33,18 +33,25 @@
   th { background: #333; padding: 8px; border-bottom: 2px solid #555; }
   td { padding: 6px; border-bottom: 1px solid #444; }
   tr:hover { background: #2f2f2f; transition: 0.2s; }
-  #saveBtn {
-    position: fixed; top: 20px; right: 20px;
-    background: #0078ff; color: white;
-    padding: 10px 18px; border: none; border-radius: 6px;
-    cursor: pointer; font-weight: bold; box-shadow: 0 0 10px #000;
-  }
-  #deleteBtn { background: #ff4444; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
   #status {
-    position: fixed; top: 60px; right: 20px;
+    position: fixed; top: 20px; right: 20px;
     background: #2a2a2a; color: #fff;
     padding: 6px 10px; border-radius: 4px; font-size: 12px; display: none;
   }
+  button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-right: 6px;
+    margin-top: 6px;
+  }
+  #localSaveBtn { background: #0078ff; color: #fff; }
+  #serverSaveBtn { background: #00aa88; color: #fff; }
+  #localLoadBtn { background: #888; color: #fff; }
+  #serverLoadBtn { background: #555; color: #fff; }
+  #deleteBtn { background: #ff4444; color: #fff; }
 </style>
 </head>
 
@@ -52,20 +59,27 @@
 
 <h2>参加者一覧（1～100）</h2>
 
-<button id="saveBtn">保存</button>
 <div id="status"></div>
 
 <div id="loadArea">
-  <label>保存データを読み込む：</label><br>
+  <label>サーバーの保存データ：</label><br>
   <select id="loadSelect" style="margin-top:5px; width:200px;"></select>
-  <button id="loadBtn">読み込み</button>
-  <button id="deleteBtn">削除</button>
+  <button id="serverLoadBtn">サーバーから読み込み</button>
+  <button id="deleteBtn">サーバーから削除</button>
+
+  <br><br>
+
+  <button id="localLoadBtn">ローカルから読み込み</button>
+  <input type="file" id="localLoadInput" accept="application/json" style="display:none;">
 </div>
 
 <div id="headerArea">
   <label>日付を選択：</label>
   <input type="date" id="eventDate">
 </div>
+
+<button id="localSaveBtn">ローカル保存</button>
+<button id="serverSaveBtn">サーバーへ保存</button>
 
 <table id="memberTable">
   <thead>
@@ -115,16 +129,7 @@ $(function () {
     setTimeout(() => $("#status").fadeOut(300), 3000);
   }
 
-  async function saveToGitHub(data) {
-    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(await res.text());
-  }
-
-  $("#saveBtn").on("click", async function () {
+  function collectMembersData() {
     const data = {
       type: "members",
       date: $("#eventDate").val(),
@@ -140,15 +145,56 @@ $(function () {
       });
     });
 
-    showStatus("保存中...");
+    return data;
+  }
 
-    try {
-      await saveToGitHub(data);
-      showStatus("保存完了");
-    } catch (e) {
-      showStatus("保存失敗: " + e.message, true);
-    }
+  function downloadLocal(filename, json) {
+    const blob = new Blob([JSON.stringify(json, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  $("#localSaveBtn").on("click", function () {
+    const data = collectMembersData();
+    const filename = `members-${data.date}.json`;
+
+    downloadLocal(filename, data);
+    showStatus("ローカルに保存しました");
   });
+
+  $("#localLoadBtn").on("click", function () {
+    $("#localLoadInput").click();
+  });
+
+  $("#localLoadInput").on("change", function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function () {
+      const json = JSON.parse(reader.result);
+      loadMembersFromJson(json);
+      showStatus("ローカルファイルを読み込みました");
+    };
+    reader.readAsText(file);
+  });
+
+  function loadMembersFromJson(json) {
+    $("#eventDate").val(json.date);
+
+    json.members.forEach((m, i) => {
+      const row = $("#memberTable tbody tr").eq(i);
+      row.find("input").val(m.name);
+      row.find("select[name^='job']").val(m.job);
+      row.find("select[name^='join']").val(m.join);
+    });
+  }
 
   async function loadFileList() {
     const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
@@ -160,31 +206,47 @@ $(function () {
       .forEach(f => $("#loadSelect").append(`<option>${f.name}</option>`));
   }
 
-  async function loadSelectedFile() {
+  $("#serverLoadBtn").on("click", async function () {
     const file = $("#loadSelect").val();
     const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
     const json = await res.json();
 
-    $("#eventDate").val(json.date);
+    loadMembersFromJson(json);
+    showStatus("サーバーから読み込みました");
+  });
 
-    json.members.forEach((m, i) => {
-      const row = $("#memberTable tbody tr").eq(i);
-      row.find("input").val(m.name);
-      row.find("select[name^='job']").val(m.job);
-      row.find("select[name^='join']").val(m.join);
-    });
+  $("#serverSaveBtn").on("click", async function () {
+    const data = collectMembersData();
 
-    showStatus("読み込み完了");
-  }
+    try {
+      const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
 
-  $("#loadBtn").on("click", loadSelectedFile);
+      showStatus(await res.text());
+      loadFileList();
+    } catch (e) {
+      showStatus("サーバー保存失敗: " + e.message, true);
+    }
+  });
 
-  // ▼ 削除機能（動作保証版）
   $("#deleteBtn").on("click", async function () {
     const file = $("#loadSelect").val();
     if (!file) return showStatus("削除対象がありません", true);
 
-    if (!confirm(file + " を削除しますか？")) return;
+    if (!confirm(file + " を削除しますか？\n削除前にバックアップを保存します。")) return;
+
+    try {
+      const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
+      const json = await res.json();
+
+      downloadLocal("backup-" + file, json);
+      showStatus("バックアップ保存完了");
+    } catch (e) {
+      return showStatus("バックアップ取得失敗: " + e.message, true);
+    }
 
     try {
       const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
@@ -196,10 +258,8 @@ $(function () {
         })
       });
 
-      const text = await res.text();
-      showStatus(text);
-
-      await loadFileList();
+      showStatus(await res.text());
+      loadFileList();
     } catch (e) {
       showStatus("削除失敗: " + e.message, true);
     }

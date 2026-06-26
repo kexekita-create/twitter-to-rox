@@ -93,6 +93,16 @@
     border: 1px solid #444;
     margin-bottom: 15px;
   }
+  #deleteBtn {
+    background: #ff4444;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 5px;
+  }
 </style>
 </head>
 
@@ -107,6 +117,7 @@
   <label>保存データを読み込む：</label><br>
   <select id="loadSelect" style="margin-top:5px; width:200px;"></select>
   <button id="loadBtn">読み込み</button>
+  <button id="deleteBtn">削除</button>
 </div>
 
 <div id="headerArea">
@@ -129,7 +140,6 @@
 <script>
 $(function () {
 
-  /* ▼ 修正済み職業リスト（ロイヤルガードに変更） */
   const jobs = [
     "ルーンナイト","ロイヤルガード","ウォーロック","ソーサラー","アークビショップ",
     "修羅","レンジャー","ミンストレル","ワンダラー","ギロチンクロス",
@@ -164,7 +174,6 @@ $(function () {
     setTimeout(() => $s.fadeOut(300), 3000);
   }
 
-  /* ▼ Cloudflare Worker に送る保存処理（修正版） */
   async function saveToGitHub(data) {
     const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
       method: "POST",
@@ -172,14 +181,12 @@ $(function () {
       body: JSON.stringify(data)
     });
 
-    if (!res.ok) {
-      throw new Error("Worker error: " + res.status);
-    }
+    if (!res.ok) throw new Error("Worker error: " + res.status);
   }
 
   $("#saveBtn").on("click", async function () {
     const data = {
-      type: "members",   // ★ これが重要（board.html と区別する）
+      type: "members",
       date: $("#eventDate").val(),
       members: []
     };
@@ -194,13 +201,13 @@ $(function () {
       data.members.push(row);
     });
 
-    showStatus("Worker に送信中...", false);
+    showStatus("Worker に送信中...");
 
     try {
       await saveToGitHub(data);
-      showStatus("保存完了（Worker → GitHub）", false);
+      showStatus("保存完了");
     } catch (e) {
-      showStatus("保存に失敗しました: " + e.message, true);
+      showStatus("保存失敗: " + e.message, true);
     }
   });
 
@@ -241,14 +248,34 @@ $(function () {
       row.find("select[name^='join']").val(m.join);
     });
 
-    showStatus("読み込み完了", false);
+    showStatus("読み込み完了");
   }
 
-  loadFileList();
   $("#loadBtn").on("click", loadSelectedFile);
+
+  // ▼ 参加者一覧の削除機能
+  $("#deleteBtn").on("click", async function () {
+    const file = $("#loadSelect").val();
+    if (!file) return showStatus("削除対象がありません", true);
+
+    if (!confirm(file + " を削除しますか？")) return;
+
+    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "delete",
+        filename: file
+      })
+    });
+
+    const text = await res.text();
+    showStatus(text);
+
+    loadFileList();
+  });
+
+  loadFileList();
 
 });
 </script>
-
-</body>
-</html>

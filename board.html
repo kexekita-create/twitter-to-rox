@@ -16,7 +16,7 @@ h2{margin-bottom:10px;font-size:22px}
 #loadArea{
   margin-bottom:10px;background:#2a2a2a;padding:12px;border-radius:6px;
   width:100%;border:1px solid #444;font-size:16px;
-  display:flex;flex-direction:column;gap:14px;
+  display:flex;flex-direction:column;gap:20px;
 }
 
 .sectionTitle{font-size:15px;margin-bottom:4px;color:#ccc}
@@ -72,17 +72,6 @@ h2{margin-bottom:10px;font-size:22px}
 
 <div id="loadArea">
 
-  <div>
-    <label>読み込む JSON：</label><br>
-    <select id="loadSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
-    <button class="btn" id="loadBtn">読み込み</button>
-  </div>
-
-  <div>
-    <label>編成一覧（サーバー）：</label><br>
-    <select id="formationSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
-  </div>
-
   <!-- ローカル操作 -->
   <div>
     <div class="sectionTitle">ローカル操作</div>
@@ -94,20 +83,22 @@ h2{margin-bottom:10px;font-size:22px}
 
   <!-- サーバー操作 -->
   <div>
-    <div class="sectionTitle">サーバー操作</div>
-    <div class="buttonGroup">
+    <div class="sectionTitle">編成一覧（サーバー）</div>
+
+    <select id="formationSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
+
+    <div class="buttonGroup" style="margin-top:10px;">
       <button class="btn" id="formationLoadBtn">サーバー読み込み</button>
-      <button class="btn delete" id="formationDeleteBtn">サーバー削除</button>
       <button class="btn" id="saveBtn">サーバー保存</button>
+      <button class="btn delete" id="formationDeleteBtn">サーバー削除</button>
     </div>
   </div>
 
-  <!-- 整列 -->
-  <div style="text-align:center;">
-    <button class="btn" id="sortBtn" style="width:200px;">未配属整列</button>
-  </div>
+</div>
 
-  <div id="status"></div>
+<!-- 未配置整列（未配属の直上） -->
+<div style="text-align:center;margin:10px 0 10px;">
+  <button class="btn" id="sortBtn" style="width:200px;">未配置整列</button>
 </div>
 
 <div id="unassigned"><h3>未配属（0）</h3></div>
@@ -295,93 +286,3 @@ f.unassigned.push({name:$(this).data("name"),job:$(this).data("job")});
 });
 zones.forEach(z=>{
 f[z]=[];
-$(`#${z} .slot .piece`).each(function(){
-f[z].push({name:$(this).data("name"),job:$(this).data("job")});
-});
-});
-return f;
-}
-
-$("#localSaveBtn").on("click",()=>{
-const data=JSON.stringify(getCurrentFormation(),null,2);
-const blob=new Blob([data],{type:"application/json"});
-const a=document.createElement("a");
-a.href=URL.createObjectURL(blob);
-a.download="formation-local.json";
-a.click();
-showStatus("ローカル保存しました");
-});
-
-$("#localLoadBtn").on("click",()=>{
-const input=document.createElement("input");
-input.type="file";
-input.accept="application/json";
-input.onchange=e=>{
-const file=e.target.files[0];
-const reader=new FileReader();
-reader.onload=ev=>{
-const json=JSON.parse(ev.target.result);
-$(".piece").remove();
-Object.keys(json).forEach(zoneId=>{
-json[zoneId].forEach(m=>{
-const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
-const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
-enableDrag($p);
-if(zoneId==="unassigned") $("#unassigned").append($p);
-else{
-const $slot=$(`#${zoneId} .slot`).filter((_,e)=>$(e).children().length===0).first();
-if($slot.length) $slot.append($p); else $("#unassigned").append($p);
-}
-});
-});
-updateCounts();
-showStatus("ローカル読み込みしました");
-};
-reader.readAsText(file);
-};
-input.click();
-});
-
-$(".tab").on("click",function(){
-$(".tab").removeClass("active");
-$(this).addClass("active");
-currentMode=$(this).data("mode");
-loadFormationList();
-});
-
-$("#loadBtn").on("click",loadSelectedFile);
-$("#formationLoadBtn").on("click",loadFormation);
-$("#saveBtn").on("click",saveFormation);
-
-$("#formationDeleteBtn").on("click", async function () {
-  const file = $("#formationSelect").val();
-  if (!file) {
-    showStatus("削除するファイルがありません");
-    return;
-  }
-
-  if (!confirm(file + " を削除しますか？")) return;
-
-  const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      type: "delete",
-      filename: file
-    })
-  });
-
-  const text = await res.text();
-  showStatus(text);
-
-  loadFormationList();
-});
-
-loadFileList();
-loadFormationList();
-
-});
-</script>
-
-</body>
-</html>

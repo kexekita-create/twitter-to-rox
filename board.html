@@ -160,28 +160,12 @@ files.filter(f=>/^members-/i.test(f.name)).map(f=>`<option>${f.name}</option>`)
 );
 }
 
-async function loadSelectedFile(){
-let file=$("#loadSelect").val().trim();
-const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
-const json=await res.json();
-
-$(".piece").remove();
-
-json.members.filter(m=>m.join==="可").forEach(m=>{
-const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
-const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
-enableDrag($p);
-$("#unassigned").append($p);
-});
-
-updateCounts();
-showStatus(file+" を読み込みました");
-}
-
 async function loadFormationList(){
 const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[currentMode];
+
 const res=await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
 const files=await res.json();
+
 $("#formationSelect").empty().append(
 files.filter(f=>f.name.startsWith(prefix)).map(f=>`<option>${f.name}</option>`)
 );
@@ -189,6 +173,8 @@ files.filter(f=>f.name.startsWith(prefix)).map(f=>`<option>${f.name}</option>`)
 
 async function loadFormation(){
 let file=$("#formationSelect").val();
+if(!file){ showStatus("サーバーデータがありません"); return; }
+
 const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
 const json=await res.json();
 
@@ -286,3 +272,94 @@ f.unassigned.push({name:$(this).data("name"),job:$(this).data("job")});
 });
 zones.forEach(z=>{
 f[z]=[];
+$(`#${z} .slot .piece`).each(function(){
+f[z].push({name:$(this).data("name"),job:$(this).data("job")});
+});
+});
+return f;
+}
+
+$("#localSaveBtn").on("click",()=>{
+const data=JSON.stringify(getCurrentFormation(),null,2);
+const blob=new Blob([data],{type:"application/json"});
+const a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="formation-local.json";
+a.click();
+showStatus("ローカル保存しました");
+});
+
+$("#localLoadBtn").on("click",()=>{
+const input=document.createElement("input");
+input.type="file";
+input.accept="application/json";
+input.onchange=e=>{
+const file=e.target.files[0];
+const reader=new FileReader();
+reader.onload=ev=>{
+const json=JSON.parse(ev.target.result);
+$(".piece").remove();
+Object.keys(json).forEach(zoneId=>{
+json[zoneId].forEach(m=>{
+const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
+const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+enableDrag($p);
+if(zoneId==="unassigned") $("#unassigned").append($p);
+else{
+const $slot=$(`#${zoneId} .slot`).filter((_,e)=>$(e).children().length===0).first();
+if($slot.length) $slot.append($p); else $("#unassigned").append($p);
+}
+});
+});
+updateCounts();
+showStatus("ローカル読み込みしました");
+};
+reader.readAsText(file);
+};
+input.click();
+});
+
+$(".tab").on("click",function(){
+$(".tab").removeClass("active");
+$(this).addClass("active");
+currentMode=$(this).data("mode");
+loadFormationList(); // ← これが必須
+});
+
+$("#loadBtn").on("click",loadSelectedFile);
+$("#formationLoadBtn").on("click",loadFormation);
+$("#saveBtn").on("click",saveFormation);
+
+$("#formationDeleteBtn").on("click", async function () {
+  const file = $("#formationSelect").val();
+  if (!file) {
+    showStatus("削除するファイルがありません");
+    return;
+  }
+
+  if (!confirm(file + " を削除しますか？")) return;
+
+  const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: "delete",
+      filename: file
+    })
+  });
+
+  const text = await res.text();
+  showStatus(text);
+
+  loadFormationList();
+});
+
+loadFileList();
+loadFormationList();
+updateCounts();
+
+});
+</script>
+
+</body>
+</html>

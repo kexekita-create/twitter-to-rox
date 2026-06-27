@@ -11,20 +11,51 @@ h2{margin-bottom:10px;font-size:22px}
 #tabs{display:flex;gap:10px;margin-bottom:10px;align-items:center}
 .tab{padding:8px 16px;background:#3a3a3a;border:1px solid #666;border-radius:6px;cursor:pointer;font-size:16px;color:#ccc}
 .tab.active{background:#0078ff;border-color:#0078ff;color:#fff}
-#copyButtons{display:flex;gap:8px;margin-left:20px}
+
+#copyButtons{display:flex;gap:8px;margin-left:auto}
 .copyBtn{padding:6px 12px;background:#444;border:1px solid #777;border-radius:6px;cursor:pointer;font-size:14px;color:#ddd}
 .copyBtn:hover{background:#555}
-#loadArea{margin-bottom:10px;background:#2a2a2a;padding:12px;border-radius:6px;width:100%;max-width:520px;border:1px solid #444;font-size:16px}
-#saveBtn,#sortBtn,#loadBtn,#formationLoadBtn,#formationDeleteBtn{background:#0078ff;color:#fff;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;margin-top:8px;margin-right:8px;font-size:15px}
-#formationDeleteBtn{background:#ff4444}
+
+#loadArea{
+  margin-bottom:10px;background:#2a2a2a;padding:12px;border-radius:6px;
+  width:100%;border:1px solid #444;font-size:16px;
+  display:flex;flex-direction:column;gap:10px;
+}
+
+#buttonRow{
+  display:flex;gap:8px;flex-wrap:wrap;
+}
+
+.btn{
+  background:#0078ff;color:#fff;padding:8px 14px;border:none;
+  border-radius:6px;cursor:pointer;font-weight:bold;font-size:15px;
+}
+.btn.delete{background:#ff4444}
+
 #status{margin-top:10px;background:#2a2a2a;padding:8px 12px;border-radius:4px;display:none;font-size:15px}
-#unassigned{background:#2a2a2a;border:2px solid #555;border-radius:6px;padding:6px;margin-bottom:15px;display:grid;grid-template-columns:repeat(6,1fr);gap:6px;max-height:320px;overflow-y:auto}
+
+#unassigned{
+  background:#2a2a2a;border:2px solid #555;border-radius:6px;padding:6px;
+  margin-bottom:15px;display:grid;grid-template-columns:repeat(6,1fr);
+  gap:6px;max-height:320px;overflow-y:auto
+}
 #unassigned h3{grid-column:span 6;margin:0 0 6px 0;font-size:18px}
-.zone{background:#2a2a2a;border:2px solid #555;border-radius:6px;padding:6px;display:grid;grid-template-columns:repeat(5,1fr);grid-auto-rows:56px;gap:6px;min-height:180px}
+
+.zone{
+  background:#2a2a2a;border:2px solid #555;border-radius:6px;padding:6px;
+  display:grid;grid-template-columns:repeat(5,1fr);grid-auto-rows:56px;gap:6px;min-height:180px
+}
 .zone h3{grid-column:span 5;margin:0 0 6px 0;font-size:18px}
+
 .slot{border:1px dashed #555;border-radius:4px;overflow:hidden}
-.piece{padding:6px 4px;border-radius:4px;cursor:grab;font-size:15px;font-weight:bold;text-align:center;user-select:none;width:100%;height:100%;box-sizing:border-box;line-height:1.3}
-.dragging{position:fixed;z-index:9999;pointer-events:none;opacity:.9;width:150px;height:56px;font-size:16px}
+.piece{
+  padding:6px 4px;border-radius:4px;cursor:grab;font-size:15px;font-weight:bold;
+  text-align:center;user-select:none;width:100%;height:100%;box-sizing:border-box;line-height:1.3
+}
+.dragging{
+  position:fixed;z-index:9999;pointer-events:none;opacity:.9;
+  width:150px;height:56px;font-size:16px
+}
 </style>
 </head>
 
@@ -45,19 +76,24 @@ h2{margin-bottom:10px;font-size:22px}
 </div>
 
 <div id="loadArea">
-  <label>読み込む JSON：</label><br>
-  <select id="loadSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
-  <button id="loadBtn">読み込み</button>
 
-  <br><br>
-  <label>編成一覧：</label><br>
-  <select id="formationSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
-  <button id="formationLoadBtn">編成ロード</button>
-  <button id="formationDeleteBtn">削除</button>
+  <div>
+    <label>読み込む JSON：</label><br>
+    <select id="loadSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
+    <button class="btn" id="loadBtn">読み込み</button>
+  </div>
 
-  <br><br>
-  <button id="sortBtn">未配属を職業ごとに整列</button>
-  <button id="saveBtn">編成を保存</button>
+  <div>
+    <label>編成一覧：</label><br>
+    <select id="formationSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
+  </div>
+
+  <div id="buttonRow">
+    <button class="btn" id="formationLoadBtn">編成ロード</button>
+    <button class="btn delete" id="formationDeleteBtn">削除</button>
+    <button class="btn" id="sortBtn">未配属整列</button>
+    <button class="btn" id="saveBtn">サーバーへ保存</button>
+  </div>
 
   <div id="status"></div>
 </div>

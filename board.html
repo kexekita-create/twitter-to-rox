@@ -8,13 +8,10 @@
 <style>
 body,html{background:#1e1e1e;color:#fff;font-family:"Segoe UI";margin:0;padding:10px}
 h2{margin-bottom:10px;font-size:22px}
+
 #tabs{display:flex;gap:10px;margin-bottom:10px;align-items:center}
 .tab{padding:8px 16px;background:#3a3a3a;border:1px solid #666;border-radius:6px;cursor:pointer;font-size:16px;color:#ccc}
 .tab.active{background:#0078ff;border-color:#0078ff;color:#fff}
-
-#copyButtons{display:flex;gap:8px;margin-left:auto}
-.copyBtn{padding:6px 12px;background:#444;border:1px solid #777;border-radius:6px;cursor:pointer;font-size:14px;color:#ddd}
-.copyBtn:hover{background:#555}
 
 #loadArea{
   margin-bottom:10px;background:#2a2a2a;padding:12px;border-radius:6px;
@@ -31,6 +28,7 @@ h2{margin-bottom:10px;font-size:22px}
   border-radius:6px;cursor:pointer;font-weight:bold;font-size:15px;
 }
 .btn.delete{background:#ff4444}
+.btn.local{background:#00aa88}
 
 #status{margin-top:10px;background:#2a2a2a;padding:8px 12px;border-radius:4px;display:none;font-size:15px}
 
@@ -67,12 +65,6 @@ h2{margin-bottom:10px;font-size:22px}
   <button class="tab active" data-mode="gvg">GvG</button>
   <button class="tab" data-mode="xgvg">XGvG</button>
   <button class="tab" data-mode="60">60vs60</button>
-
-  <div id="copyButtons">
-    <button class="copyBtn" data-target="gvg">→GvG</button>
-    <button class="copyBtn" data-target="xgvg">→XGvG</button>
-    <button class="copyBtn" data-target="60">→60</button>
-  </div>
 </div>
 
 <div id="loadArea">
@@ -84,15 +76,18 @@ h2{margin-bottom:10px;font-size:22px}
   </div>
 
   <div>
-    <label>編成一覧：</label><br>
+    <label>編成一覧（サーバー）：</label><br>
     <select id="formationSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
   </div>
 
   <div id="buttonRow">
-    <button class="btn" id="formationLoadBtn">編成ロード</button>
-    <button class="btn delete" id="formationDeleteBtn">削除</button>
+    <button class="btn local" id="localSaveBtn">ローカル保存</button>
+    <button class="btn local" id="localLoadBtn">ローカル読み込み</button>
+
+    <button class="btn" id="formationLoadBtn">サーバー読み込み</button>
+    <button class="btn delete" id="formationDeleteBtn">サーバー削除</button>
     <button class="btn" id="sortBtn">未配属整列</button>
-    <button class="btn" id="saveBtn">サーバーへ保存</button>
+    <button class="btn" id="saveBtn">サーバー保存</button>
   </div>
 
   <div id="status"></div>
@@ -273,7 +268,7 @@ method:"POST",headers:{"Content-Type":"application/json"},
 body:JSON.stringify({type:"formation",prefix,timestamp:new Date().toISOString(),formation})
 });
 
-showStatus("編成を保存しました");
+showStatus("サーバーへ保存しました");
 }
 
 function getCurrentFormation(){
@@ -290,33 +285,45 @@ f[z].push({name:$(this).data("name"),job:$(this).data("job")});
 return f;
 }
 
-$(".copyBtn").on("click",function(){
-copyFormationTo($(this).data("target"));
+$("#localSaveBtn").on("click",()=>{
+const data=JSON.stringify(getCurrentFormation(),null,2);
+const blob=new Blob([data],{type:"application/json"});
+const a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="formation-local.json";
+a.click();
+showStatus("ローカル保存しました");
 });
 
-async function copyFormationTo(target){
-const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[target];
-const formation=getCurrentFormation();
-
-await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
-method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({type:"formation",prefix,timestamp:new Date().toISOString(),formation})
+$("#localLoadBtn").on("click",()=>{
+const input=document.createElement("input");
+input.type="file";
+input.accept="application/json";
+input.onchange=e=>{
+const file=e.target.files[0];
+const reader=new FileReader();
+reader.onload=ev=>{
+const json=JSON.parse(ev.target.result);
+$(".piece").remove();
+Object.keys(json).forEach(zoneId=>{
+json[zoneId].forEach(m=>{
+const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
+const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+enableDrag($p);
+if(zoneId==="unassigned") $("#unassigned").append($p);
+else{
+const $slot=$(`#${zoneId} .slot`).filter((_,e)=>$(e).children().length===0).first();
+if($slot.length) $slot.append($p); else $("#unassigned").append($p);
+}
 });
-
-showStatus("コピーしました → "+target);
-}
-
-function showStatus(msg){
-$("#status").text(msg).fadeIn(150);
-setTimeout(()=>$("#status").fadeOut(300),2000);
-}
-
-loadFileList();
-loadFormationList();
-
-$("#loadBtn").on("click",loadSelectedFile);
-$("#formationLoadBtn").on("click",loadFormation);
-$("#saveBtn").on("click",saveFormation);
+});
+updateCounts();
+showStatus("ローカル読み込みしました");
+};
+reader.readAsText(file);
+};
+input.click();
+});
 
 $(".tab").on("click",function(){
 $(".tab").removeClass("active");
@@ -324,6 +331,10 @@ $(this).addClass("active");
 currentMode=$(this).data("mode");
 loadFormationList();
 });
+
+$("#loadBtn").on("click",loadSelectedFile);
+$("#formationLoadBtn").on("click",loadFormation);
+$("#saveBtn").on("click",saveFormation);
 
 $("#formationDeleteBtn").on("click", async function () {
   const file = $("#formationSelect").val();
@@ -348,6 +359,9 @@ $("#formationDeleteBtn").on("click", async function () {
 
   loadFormationList();
 });
+
+loadFileList();
+loadFormationList();
 
 });
 </script>

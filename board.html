@@ -72,6 +72,13 @@ h2{margin-bottom:10px;font-size:22px}
 
 <div id="loadArea">
 
+  <!-- 読み込む JSON（メンバー） -->
+  <div>
+    <div class="sectionTitle">読み込む JSON</div>
+    <select id="loadSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
+    <button class="btn" id="loadBtn" style="margin-left:10px;">読み込み</button>
+  </div>
+
   <!-- ローカル操作 -->
   <div>
     <div class="sectionTitle">ローカル操作</div>
@@ -94,6 +101,7 @@ h2{margin-bottom:10px;font-size:22px}
     </div>
   </div>
 
+  <div id="status"></div>
 </div>
 
 <!-- 未配置整列（未配属の直上） -->
@@ -144,6 +152,10 @@ return (0.299*r+0.587*g+0.114*b)>150?"#000":"#fff";
 
 const zones=["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"];
 
+function showStatus(msg){
+  $("#status").text(msg).show();
+}
+
 function updateCounts(){
 $("#unassigned h3").text(`未配属（${$("#unassigned .piece").length}）`);
 zones.forEach(id=>{
@@ -158,6 +170,26 @@ const files=await res.json();
 $("#loadSelect").empty().append(
 files.filter(f=>/^members-/i.test(f.name)).map(f=>`<option>${f.name}</option>`)
 );
+}
+
+async function loadSelectedFile(){
+let file=$("#loadSelect").val();
+if(!file){showStatus("メンバーJSONがありません");return;}
+
+const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
+const json=await res.json();
+
+$(".piece").remove();
+
+json.members.filter(m=>m.join==="可").forEach(m=>{
+const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
+const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+enableDrag($p);
+$("#unassigned").append($p);
+});
+
+updateCounts();
+showStatus(file+" を読み込みました");
 }
 
 async function loadFormationList(){
@@ -323,7 +355,7 @@ $(".tab").on("click",function(){
 $(".tab").removeClass("active");
 $(this).addClass("active");
 currentMode=$(this).data("mode");
-loadFormationList(); // ← これが必須
+loadFormationList();
 });
 
 $("#loadBtn").on("click",loadSelectedFile);

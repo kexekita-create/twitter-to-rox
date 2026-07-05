@@ -219,11 +219,12 @@ $(function () {
     const data = collectMembersData();
 
     try {
-      const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
+    data.project = "twitter"
+    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
-      });
+    });
 
       showStatus(await res.text());
       loadFileList();
@@ -253,6 +254,7 @@ $(function () {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          project: "twitter",
           type: "delete",
           filename: file
         })

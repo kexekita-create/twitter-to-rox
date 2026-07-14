@@ -291,7 +291,7 @@ const formation=getCurrentFormation();
 
 await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
 method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({project: "twitter",type:"formation",prefix,timestamp:new Date().toISOString(),formation})
+body:JSON.stringify({type:"formation",prefix,timestamp:new Date().toISOString(),formation})
 });
 
 showStatus("サーバーへ保存しました");
@@ -375,7 +375,6 @@ $("#formationDeleteBtn").on("click", async function () {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      project: "twitter"
       type: "delete",
       filename: file
     })

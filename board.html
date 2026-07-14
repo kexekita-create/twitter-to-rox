@@ -1,78 +1,220 @@
+<!-- ============================================
+  Part 1 : HEAD（タイトル・CSS・jQuery）
+  ============================================ -->
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+
+<!-- ページタイトル -->
 <title>配置ボード</title>
+
+<!-- jQuery 読み込み -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+<!-- ============================================
+  CSS（全体デザイン）
+  ============================================ -->
 <style>
-body,html{background:#1e1e1e;color:#fff;font-family:"Segoe UI";margin:0;padding:10px}
-h2{margin-bottom:10px;font-size:22px}
 
-#tabs{display:flex;gap:10px;margin-bottom:10px;align-items:center}
-.tab{padding:8px 16px;background:#3a3a3a;border:1px solid #666;border-radius:6px;cursor:pointer;font-size:16px;color:#ccc}
-.tab.active{background:#0078ff;border-color:#0078ff;color:#fff}
+/* 全体の背景と文字色 */
+body,html{
+  background:#1e1e1e;
+  color:#fff;
+  font-family:"Segoe UI";
+  margin:0;
+  padding:10px;
+}
 
+/* タイトル */
+h2{
+  margin-bottom:10px;
+  font-size:22px;
+}
+
+/* タブ（GvG / XGvG / 60vs60） */
+#tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:10px;
+  align-items:center;
+}
+.tab{
+  padding:8px 16px;
+  background:#3a3a3a;
+  border:1px solid #666;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:16px;
+  color:#ccc;
+}
+.tab.active{
+  background:#0078ff;
+  border-color:#0078ff;
+  color:#fff;
+}
+
+/* 読み込み・保存エリア全体 */
 #loadArea{
-  margin-bottom:10px;background:#2a2a2a;padding:12px;border-radius:6px;
-  width:100%;border:1px solid #444;font-size:16px;
-  display:flex;flex-direction:column;gap:20px;
+  margin-bottom:10px;
+  background:#2a2a2a;
+  padding:12px;
+  border-radius:6px;
+  width:100%;
+  border:1px solid #444;
+  font-size:16px;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
 }
 
-.sectionTitle{font-size:15px;margin-bottom:4px;color:#ccc}
+/* セクションタイトル */
+.sectionTitle{
+  font-size:15px;
+  margin-bottom:4px;
+  color:#ccc;
+}
 
+/* ボタンのまとまり */
 .buttonGroup{
-  display:flex;gap:10px;flex-wrap:wrap;
-  background:#222;padding:10px;border-radius:6px;border:1px solid #444;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  background:#222;
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #444;
 }
 
+/* ボタン共通 */
 .btn{
-  background:#0078ff;color:#fff;padding:8px 14px;border:none;
-  border-radius:6px;cursor:pointer;font-weight:bold;font-size:15px;
+  background:#0078ff;
+  color:#fff;
+  padding:8px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:bold;
+  font-size:15px;
 }
-.btn.delete{background:#ff4444}
-.btn.local{background:#00aa88}
 
-#status{margin-top:10px;background:#2a2a2a;padding:8px 12px;border-radius:4px;display:none;font-size:15px}
+/* 削除ボタン */
+.btn.delete{
+  background:#ff4444;
+}
 
+/* ローカル操作ボタン */
+.btn.local{
+  background:#00aa88;
+}
+
+/* ステータス表示 */
+#status{
+  margin-top:10px;
+  background:#2a2a2a;
+  padding:8px 12px;
+  border-radius:4px;
+  display:none;
+  font-size:15px;
+}
+
+/* 未配属エリア */
 #unassigned{
-  background:#2a2a2a;border:2px solid #555;border-radius:6px;padding:6px;
-  margin-bottom:15px;display:grid;grid-template-columns:repeat(6,1fr);
-  gap:6px;max-height:320px;overflow-y:auto
+  background:#2a2a2a;
+  border:2px solid #555;
+  border-radius:6px;
+  padding:6px;
+  margin-bottom:15px;
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:6px;
+  max-height:320px;
+  overflow-y:auto;
 }
-#unassigned h3{grid-column:span 6;margin:0 0 6px 0;font-size:18px}
+#unassigned h3{
+  grid-column:span 6;
+  margin:0 0 6px 0;
+  font-size:18px;
+}
 
+/* チームゾーン */
 .zone{
-  background:#2a2a2a;border:2px solid #555;border-radius:6px;padding:6px;
-  display:grid;grid-template-columns:repeat(5,1fr);grid-auto-rows:56px;gap:6px;min-height:180px
+  background:#2a2a2a;
+  border:2px solid #555;
+  border-radius:6px;
+  padding:6px;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  grid-auto-rows:56px;
+  gap:6px;
+  min-height:180px;
 }
-.zone h3{grid-column:span 5;margin:0 0 6px 0;font-size:18px}
+.zone h3{
+  grid-column:span 5;
+  margin:0 0 6px 0;
+  font-size:18px;
+}
 
-.slot{border:1px dashed #555;border-radius:4px;overflow:hidden}
+/* スロット（空き枠） */
+.slot{
+  border:1px dashed #555;
+  border-radius:4px;
+  overflow:hidden;
+}
+
+/* メンバーのピース */
 .piece{
-  padding:6px 4px;border-radius:4px;cursor:grab;font-size:15px;font-weight:bold;
-  text-align:center;user-select:none;width:100%;height:100%;box-sizing:border-box;line-height:1.3
+  padding:6px 4px;
+  border-radius:4px;
+  cursor:grab;
+  font-size:15px;
+  font-weight:bold;
+  text-align:center;
+  user-select:none;
+  width:100%;
+  height:100%;
+  box-sizing:border-box;
+  line-height:1.3;
 }
+
+/* ドラッグ中の見た目 */
 .dragging{
-  position:fixed;z-index:9999;pointer-events:none;opacity:.9;
-  width:150px;height:56px;font-size:16px
+  position:fixed;
+  z-index:9999;
+  pointer-events:none;
+  opacity:.9;
+  width:150px;
+  height:56px;
+  font-size:16px;
 }
+
 </style>
 </head>
+<!-- ============================================
+  Part 2 : BODY 上部（タイトル・タブ・読み込みUI）
+  ============================================ -->
 
 <body>
 
+<!-- ページタイトル -->
 <h2>配置ボード（参加可のメンバーのみ）</h2>
 
+<!-- ============================================
+  タブ切り替え（GvG / XGvG / 60vs60）
+  ============================================ -->
 <div id="tabs">
   <button class="tab active" data-mode="gvg">GvG</button>
   <button class="tab" data-mode="xgvg">XGvG</button>
   <button class="tab" data-mode="60">60vs60</button>
 </div>
 
+<!-- ============================================
+  読み込み・保存エリア
+  ============================================ -->
 <div id="loadArea">
 
-  <!-- 読み込む JSON（メンバー） -->
+  <!-- メンバーJSON読み込み -->
   <div>
     <div class="sectionTitle">読み込む JSON</div>
     <select id="loadSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
@@ -92,8 +234,10 @@ h2{margin-bottom:10px;font-size:22px}
   <div>
     <div class="sectionTitle">編成一覧（サーバー）</div>
 
+    <!-- サーバーの編成一覧プルダウン -->
     <select id="formationSelect" style="margin-top:5px;width:260px;font-size:15px;"></select>
 
+    <!-- 読み込み・保存・削除ボタン -->
     <div class="buttonGroup" style="margin-top:10px;">
       <button class="btn" id="formationLoadBtn">サーバー読み込み</button>
       <button class="btn" id="saveBtn">サーバー保存</button>
@@ -101,294 +245,459 @@ h2{margin-bottom:10px;font-size:22px}
     </div>
   </div>
 
+  <!-- ステータス表示 -->
   <div id="status"></div>
+
 </div>
 
-<!-- 未配置整列（未配属の直上） -->
+<!-- ============================================
+  未配置整列ボタン（未配属の直上）
+  ============================================ -->
 <div style="text-align:center;margin:10px 0 10px;">
   <button class="btn" id="sortBtn" style="width:200px;">未配置整列</button>
 </div>
 
+<!-- 未配属エリア -->
 <div id="unassigned"><h3>未配属（0）</h3></div>
+<!-- ============================================
+  Part 3 : チームゾーン生成（A〜Fの枠を作る部分）
+  ============================================ -->
 
+<!-- 2カラムでチームゾーンを並べる -->
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
 <script>
-const teamIds=["A","B","C","D","E","F"];
-document.write(teamIds.map(id=>`
-  <div class="zone" id="zone${id}">
-    <h3>チーム${id}（0）</h3>
-    ${"<div class='slot'></div>".repeat(15)}
-  </div>
-`).join(""));
+  /* --------------------------------------------
+     チームID一覧（A〜F）
+     -------------------------------------------- */
+  const teamIds = ["A", "B", "C", "D", "E", "F"];
+
+  /* --------------------------------------------
+     document.write でゾーンを生成
+     - zoneA, zoneB, zoneC, zoneD, zoneE, zoneF
+     - 各ゾーンに 15 スロットを作成
+     -------------------------------------------- */
+  document.write(
+    teamIds.map(id => `
+      <div class="zone" id="zone${id}">
+        <h3>チーム${id}（0）</h3>
+        ${"<div class='slot'></div>".repeat(15)}
+      </div>
+    `).join("")
+  );
 </script>
+
 </div>
+<!-- ============================================
+  Part 4 : JavaScript（全機能）
+  ============================================ -->
 
 <script>
 $(function(){
 
-let currentMode="gvg";
+  /* --------------------------------------------
+     現在のモード（GvG / XGvG / 60）
+     -------------------------------------------- */
+  let currentMode = "gvg";
 
-const jobColors={
-"ルーンナイト":"#b30000","ロイヤルガード":"#ff4d4d",
-"ウォーロック":"#0033cc","ソーサラー":"#4d79ff",
-"アークビショップ":"#bfa76a","修羅":"#a68b54",
-"レンジャー":"#006600","ミンストレル":"#33cc33","ワンダラー":"#33cc33",
-"ギロチンクロス":"#4d0066","シャドウチェイサー":"#9933cc",
-"ジェネティック":"#0099cc","メカニック":"#66d9ff",
-"ハイパーノービス":"#ffffff"
-};
+  /* --------------------------------------------
+     職業カラー
+     -------------------------------------------- */
+  const jobColors = {
+    "ルーンナイト":"#b30000","ロイヤルガード":"#ff4d4d",
+    "ウォーロック":"#0033cc","ソーサラー":"#4d79ff",
+    "アークビショップ":"#bfa76a","修羅":"#a68b54",
+    "レンジャー":"#006600","ミンストレル":"#33cc33","ワンダラー":"#33cc33",
+    "ギロチンクロス":"#4d0066","シャドウチェイサー":"#9933cc",
+    "ジェネティック":"#0099cc","メカニック":"#66d9ff",
+    "ハイパーノービス":"#ffffff"
+  };
 
-const jobShort={
-"ルーンナイト":"ル","ロイヤルガード":"ロ","ウォーロック":"ウ","ソーサラー":"ソ",
-"アークビショップ":"ア","修羅":"修","レンジャー":"レ","ミンストレル":"ミ",
-"ワンダラー":"ワ","ギロチンクロス":"ギ","シャドウチェイサー":"シ",
-"ジェネティック":"ジ","メカニック":"メ","ハイパーノービス":"ノ"
-};
+  /* --------------------------------------------
+     職業略称
+     -------------------------------------------- */
+  const jobShort = {
+    "ルーンナイト":"ル","ロイヤルガード":"ロ","ウォーロック":"ウ","ソーサラー":"ソ",
+    "アークビショップ":"ア","修羅":"修","レンジャー":"レ","ミンストレル":"ミ",
+    "ワンダラー":"ワ","ギロチンクロス":"ギ","シャドウチェイサー":"シ",
+    "ジェネティック":"ジ","メカニック":"メ","ハイパーノービス":"ノ"
+  };
 
-function getTextColor(bg){
-const r=parseInt(bg.substr(1,2),16),g=parseInt(bg.substr(3,2),16),b=parseInt(bg.substr(5,2),16);
-return (0.299*r+0.587*g+0.114*b)>150?"#000":"#fff";
-}
-
-const zones=["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"];
-
-function showStatus(msg){
-  $("#status").text(msg).show();
-}
-
-function updateCounts(){
-$("#unassigned h3").text(`未配属（${$("#unassigned .piece").length}）`);
-zones.forEach(id=>{
-const c=$(`#${id} .slot .piece`).length;
-$(`#${id} h3`).text(`チーム${id.replace("zone","")}（${c}）`);
-});
-}
-
-async function loadFileList(){
-const res=await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
-const files=await res.json();
-$("#loadSelect").empty().append(
-files.filter(f=>/^members-/i.test(f.name)).map(f=>`<option>${f.name}</option>`)
-);
-}
-
-async function loadSelectedFile(){
-let file=$("#loadSelect").val();
-if(!file){showStatus("メンバーJSONがありません");return;}
-
-const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
-const json=await res.json();
-
-$(".piece").remove();
-
-json.members.filter(m=>m.join==="可").forEach(m=>{
-const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
-const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
-enableDrag($p);
-$("#unassigned").append($p);
-});
-
-updateCounts();
-showStatus(file+" を読み込みました");
-}
-
-async function loadFormationList(){
-const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[currentMode];
-
-const res=await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
-const files=await res.json();
-
-$("#formationSelect").empty().append(
-files.filter(f=>f.name.startsWith(prefix)).map(f=>`<option>${f.name}</option>`)
-);
-}
-
-async function loadFormation(){
-let file=$("#formationSelect").val();
-if(!file){ showStatus("サーバーデータがありません"); return; }
-
-const res=await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
-const json=await res.json();
-
-$(".piece").remove();
-
-const formation=json.formation||{};
-Object.keys(formation).forEach(zoneId=>{
-formation[zoneId].forEach(m=>{
-const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
-const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
-enableDrag($p);
-
-if(zoneId==="unassigned") $("#unassigned").append($p);
-else{
-const $slot=$(`#${zoneId} .slot`).filter((_,e)=>$(e).children().length===0).first();
-if($slot.length) $slot.append($p); else $("#unassigned").append($p);
-}
-});
-});
-
-updateCounts();
-showStatus(file+" を読み込みました");
-}
-
-function movePiece($el,x,y){$el.css({left:x-75+"px",top:y-24+"px"})}
-
-function enableDrag($p){
-let dragging=false;
-
-$p.on("mousedown touchstart",e=>{
-e.preventDefault(); dragging=true;
-const x=e.clientX||e.originalEvent.touches[0].clientX;
-const y=e.clientY||e.originalEvent.touches[0].clientY;
-$p.addClass("dragging"); movePiece($p,x,y);
-});
-
-$(document).on("mousemove touchmove",e=>{
-if(!dragging)return;
-const x=e.clientX||e.originalEvent.touches[0].clientX;
-const y=e.clientY||e.originalEvent.touches[0].clientY;
-movePiece($p,x,y);
-});
-
-$(document).on("mouseup touchend",e=>{
-if(!dragging)return; dragging=false;
-const x=e.clientX||(e.originalEvent.changedTouches&&e.originalEvent.changedTouches[0].clientX);
-const y=e.clientY||(e.originalEvent.changedTouches&&e.originalEvent.changedTouches[0].clientY);
-const target=document.elementFromPoint(x,y);
-const $slot=$(target).closest(".slot");
-const $zone=$(target).closest(".zone");
-const $un=$(target).closest("#unassigned");
-
-$p.removeClass("dragging").css({left:"",top:""});
-
-if($un.length) $("#unassigned").append($p);
-else if($slot.length){
-if($slot.children().length>0) $("#unassigned").append($slot.children().first());
-$slot.append($p);
-}
-else if($zone.length){
-const $empty=$zone.find(".slot").filter((_,e)=>$(e).children().length===0).first();
-if($empty.length) $empty.append($p); else $("#unassigned").append($p);
-}
-else $("#unassigned").append($p);
-
-updateCounts();
-});
-}
-
-$("#sortBtn").on("click",()=>{
-const pieces=$("#unassigned .piece").get();
-pieces.sort((a,b)=>{
-const A=$(a).data("job"),B=$(b).data("job");
-return Object.keys(jobShort).indexOf(A)-Object.keys(jobShort).indexOf(B);
-});
-pieces.forEach(p=>$("#unassigned").append(p));
-});
-
-async function saveFormation(){
-const prefix={gvg:"formation-gvg",xgvg:"formation-xgvg","60":"formation-60"}[currentMode];
-const formation=getCurrentFormation();
-
-await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
-method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({type:"formation",prefix,timestamp:new Date().toISOString(),formation})
-});
-
-showStatus("サーバーへ保存しました");
-}
-
-function getCurrentFormation(){
-const f={unassigned:[]};
-$("#unassigned .piece").each(function(){
-f.unassigned.push({name:$(this).data("name"),job:$(this).data("job")});
-});
-zones.forEach(z=>{
-f[z]=[];
-$(`#${z} .slot .piece`).each(function(){
-f[z].push({name:$(this).data("name"),job:$(this).data("job")});
-});
-});
-return f;
-}
-
-$("#localSaveBtn").on("click",()=>{
-const data=JSON.stringify(getCurrentFormation(),null,2);
-const blob=new Blob([data],{type:"application/json"});
-const a=document.createElement("a");
-a.href=URL.createObjectURL(blob);
-a.download="formation-local.json";
-a.click();
-showStatus("ローカル保存しました");
-});
-
-$("#localLoadBtn").on("click",()=>{
-const input=document.createElement("input");
-input.type="file";
-input.accept="application/json";
-input.onchange=e=>{
-const file=e.target.files[0];
-const reader=new FileReader();
-reader.onload=ev=>{
-const json=JSON.parse(ev.target.result);
-$(".piece").remove();
-Object.keys(json).forEach(zoneId=>{
-json[zoneId].forEach(m=>{
-const bg=jobColors[m.job]||"#888",tc=getTextColor(bg),s=jobShort[m.job]||"？";
-const $p=$(`<div class="piece" data-name="${m.name}" data-job="${m.job}" style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
-enableDrag($p);
-if(zoneId==="unassigned") $("#unassigned").append($p);
-else{
-const $slot=$(`#${zoneId} .slot`).filter((_,e)=>$(e).children().length===0).first();
-if($slot.length) $slot.append($p); else $("#unassigned").append($p);
-}
-});
-});
-updateCounts();
-showStatus("ローカル読み込みしました");
-};
-reader.readAsText(file);
-};
-input.click();
-});
-
-$(".tab").on("click",function(){
-$(".tab").removeClass("active");
-$(this).addClass("active");
-currentMode=$(this).data("mode");
-loadFormationList();
-});
-
-$("#loadBtn").on("click",loadSelectedFile);
-$("#formationLoadBtn").on("click",loadFormation);
-$("#saveBtn").on("click",saveFormation);
-
-$("#formationDeleteBtn").on("click", async function () {
-  const file = $("#formationSelect").val();
-  if (!file) {
-    showStatus("削除するファイルがありません");
-    return;
+  /* --------------------------------------------
+     文字色（背景に応じて黒/白）
+     -------------------------------------------- */
+  function getTextColor(bg){
+    const r=parseInt(bg.substr(1,2),16),
+          g=parseInt(bg.substr(3,2),16),
+          b=parseInt(bg.substr(5,2),16);
+    return (0.299*r+0.587*g+0.114*b)>150 ? "#000" : "#fff";
   }
 
-  if (!confirm(file + " を削除しますか？")) return;
+  /* --------------------------------------------
+     チームゾーン一覧
+     -------------------------------------------- */
+  const zones = ["zoneA","zoneB","zoneC","zoneD","zoneE","zoneF"];
 
-  const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      type: "delete",
-      filename: file
-    })
+  /* --------------------------------------------
+     ステータス表示
+     -------------------------------------------- */
+  function showStatus(msg){
+    $("#status").text(msg).show();
+  }
+
+  /* --------------------------------------------
+     各ゾーンの人数更新
+     -------------------------------------------- */
+  function updateCounts(){
+    $("#unassigned h3").text(`未配属（${$("#unassigned .piece").length}）`);
+    zones.forEach(id=>{
+      const c = $(`#${id} .slot .piece`).length;
+      $(`#${id} h3`).text(`チーム${id.replace("zone","")}（${c}）`);
+    });
+  }
+
+  /* --------------------------------------------
+     メンバーJSON一覧読み込み
+     -------------------------------------------- */
+  async function loadFileList(){
+    const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
+    const files = await res.json();
+    $("#loadSelect").empty().append(
+      files.filter(f=>/^members-/i.test(f.name)).map(f=>`<option>${f.name}</option>`)
+    );
+  }
+
+  /* --------------------------------------------
+     メンバーJSON読み込み
+     -------------------------------------------- */
+  async function loadSelectedFile(){
+    let file = $("#loadSelect").val();
+    if(!file){ showStatus("メンバーJSONがありません"); return; }
+
+    const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
+    const json = await res.json();
+
+    $(".piece").remove();
+
+    json.members.filter(m=>m.join==="可").forEach(m=>{
+      const bg = jobColors[m.job] || "#888";
+      const tc = getTextColor(bg);
+      const s  = jobShort[m.job] || "？";
+
+      const $p = $(`<div class="piece" data-name="${m.name}" data-job="${m.job}"
+                    style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+      enableDrag($p);
+      $("#unassigned").append($p);
+    });
+
+    updateCounts();
+    showStatus(file+" を読み込みました");
+  }
+
+  /* --------------------------------------------
+     サーバー編成一覧読み込み
+     -------------------------------------------- */
+  async function loadFormationList(){
+    const prefix = {
+      gvg:"formation-gvg",
+      xgvg:"formation-xgvg",
+      "60":"formation-60"
+    }[currentMode];
+
+    const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
+    const files = await res.json();
+
+    $("#formationSelect").empty().append(
+      files.filter(f=>f.name.startsWith(prefix)).map(f=>`<option>${f.name}</option>`)
+    );
+  }
+
+  /* --------------------------------------------
+     サーバー編成読み込み
+     -------------------------------------------- */
+  async function loadFormation(){
+    let file = $("#formationSelect").val();
+    if(!file){ showStatus("サーバーデータがありません"); return; }
+
+    const res = await fetch(`https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${file}`);
+    const json = await res.json();
+
+    $(".piece").remove();
+
+    const formation = json.formation || {};
+
+    Object.keys(formation).forEach(zoneId=>{
+      formation[zoneId].forEach(m=>{
+        const bg = jobColors[m.job] || "#888";
+        const tc = getTextColor(bg);
+        const s  = jobShort[m.job] || "？";
+
+        const $p = $(`<div class="piece" data-name="${m.name}" data-job="${m.job}"
+                      style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+        enableDrag($p);
+
+        if(zoneId==="unassigned"){
+          $("#unassigned").append($p);
+        }else{
+          const $slot = $(`#${zoneId} .slot`).filter((_,e)=>$(e).children().length===0).first();
+          if($slot.length) $slot.append($p);
+          else $("#unassigned").append($p);
+        }
+      });
+    });
+
+    updateCounts();
+    showStatus(file+" を読み込みました");
+  }
+
+  /* --------------------------------------------
+     ピース移動（ドラッグ位置）
+     -------------------------------------------- */
+  function movePiece($el,x,y){
+    $el.css({left:x-75+"px",top:y-24+"px"});
+  }
+
+  /* --------------------------------------------
+     ドラッグ＆ドロップ
+     -------------------------------------------- */
+  function enableDrag($p){
+    let dragging = false;
+
+    $p.on("mousedown touchstart",e=>{
+      e.preventDefault();
+      dragging = true;
+
+      const x = e.clientX || e.originalEvent.touches[0].clientX;
+      const y = e.clientY || e.originalEvent.touches[0].clientY;
+
+      $p.addClass("dragging");
+      movePiece($p,x,y);
+    });
+
+    $(document).on("mousemove touchmove",e=>{
+      if(!dragging) return;
+
+      const x = e.clientX || e.originalEvent.touches[0].clientX;
+      const y = e.clientY || e.originalEvent.touches[0].clientY;
+
+      movePiece($p,x,y);
+    });
+
+    $(document).on("mouseup touchend",e=>{
+      if(!dragging) return;
+      dragging = false;
+
+      const x = e.clientX || (e.originalEvent.changedTouches && e.originalEvent.changedTouches[0].clientX);
+      const y = e.clientY || (e.originalEvent.changedTouches && e.originalEvent.changedTouches[0].clientY);
+
+      const target = document.elementFromPoint(x,y);
+
+      const $slot = $(target).closest(".slot");
+      const $zone = $(target).closest(".zone");
+      const $un   = $(target).closest("#unassigned");
+
+      $p.removeClass("dragging").css({left:"",top:""});
+
+      if($un.length){
+        $("#unassigned").append($p);
+      }
+      else if($slot.length){
+        if($slot.children().length>0){
+          $("#unassigned").append($slot.children().first());
+        }
+        $slot.append($p);
+      }
+      else if($zone.length){
+        const $empty = $zone.find(".slot").filter((_,e)=>$(e).children().length===0).first();
+        if($empty.length) $empty.append($p);
+        else $("#unassigned").append($p);
+      }
+      else{
+        $("#unassigned").append($p);
+      }
+
+      updateCounts();
+    });
+  }
+
+  /* --------------------------------------------
+     未配置整列
+     -------------------------------------------- */
+  $("#sortBtn").on("click",()=>{
+    const pieces = $("#unassigned .piece").get();
+    pieces.sort((a,b)=>{
+      const A = $(a).data("job");
+      const B = $(b).data("job");
+      return Object.keys(jobShort).indexOf(A) - Object.keys(jobShort).indexOf(B);
+    });
+    pieces.forEach(p=>$("#unassigned").append(p));
   });
 
-  const text = await res.text();
-  showStatus(text);
+  /* --------------------------------------------
+     サーバー保存
+     -------------------------------------------- */
+  async function saveFormation(){
+    const prefix = {
+      gvg:"formation-gvg",
+      xgvg:"formation-xgvg",
+      "60":"formation-60"
+    }[currentMode];
 
+    const formation = getCurrentFormation();
+
+    await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        type:"formation",
+        prefix,
+        timestamp:new Date().toISOString(),
+        formation
+      })
+    });
+
+    showStatus("サーバーへ保存しました");
+  }
+
+  /* --------------------------------------------
+     現在の編成を取得
+     -------------------------------------------- */
+  function getCurrentFormation(){
+    const f = { unassigned:[] };
+
+    $("#unassigned .piece").each(function(){
+      f.unassigned.push({
+        name:$(this).data("name"),
+        job:$(this).data("job")
+      });
+    });
+
+    zones.forEach(z=>{
+      f[z] = [];
+      $(`#${z} .slot .piece`).each(function(){
+        f[z].push({
+          name:$(this).data("name"),
+          job:$(this).data("job")
+        });
+      });
+    });
+
+    return f;
+  }
+
+  /* --------------------------------------------
+     ローカル保存
+     -------------------------------------------- */
+  $("#localSaveBtn").on("click",()=>{
+    const data = JSON.stringify(getCurrentFormation(),null,2);
+    const blob = new Blob([data],{type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "formation-local.json";
+    a.click();
+    showStatus("ローカル保存しました");
+  });
+
+  /* --------------------------------------------
+     ローカル読み込み
+     -------------------------------------------- */
+  $("#localLoadBtn").on("click",()=>{
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+
+    input.onchange = e=>{
+      const file = e.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = ev=>{
+        const json = JSON.parse(ev.target.result);
+
+        $(".piece").remove();
+
+        Object.keys(json).forEach(zoneId=>{
+          json[zoneId].forEach(m=>{
+            const bg = jobColors[m.job] || "#888";
+            const tc = getTextColor(bg);
+            const s  = jobShort[m.job] || "？";
+
+            const $p = $(`<div class="piece" data-name="${m.name}" data-job="${m.job}"
+                          style="background:${bg};color:${tc}">[${s}] ${m.name}</div>`);
+            enableDrag($p);
+
+            if(zoneId==="unassigned"){
+              $("#unassigned").append($p);
+            }else{
+              const $slot = $(`#${zoneId} .slot`).filter((_,e)=>$(e).children().length===0).first();
+              if($slot.length) $slot.append($p);
+              else $("#unassigned").append($p);
+            }
+          });
+        });
+
+        updateCounts();
+        showStatus("ローカル読み込みしました");
+      };
+
+      reader.readAsText(file);
+    };
+
+    input.click();
+  });
+
+  /* --------------------------------------------
+     タブ切り替え
+     -------------------------------------------- */
+  $(".tab").on("click",function(){
+    $(".tab").removeClass("active");
+    $(this).addClass("active");
+
+    currentMode = $(this).data("mode");
+
+    loadFormationList();
+  });
+
+  /* --------------------------------------------
+     ボタンイベント
+     -------------------------------------------- */
+  $("#loadBtn").on("click",loadSelectedFile);
+  $("#formationLoadBtn").on("click",loadFormation);
+  $("#saveBtn").on("click",saveFormation);
+
+  /* --------------------------------------------
+     サーバー削除
+     -------------------------------------------- */
+  $("#formationDeleteBtn").on("click", async function () {
+
+    const file = $("#formationSelect").val();
+    if (!file){
+      showStatus("削除するファイルがありません");
+      return;
+    }
+
+    if (!confirm(file + " を削除しますか？")) return;
+
+    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "delete",
+        filename: file
+      })
+    });
+
+    const text = await res.text();
+    showStatus(text);
+
+    loadFormationList();
+  });
+
+  /* --------------------------------------------
+     初期ロード
+     -------------------------------------------- */
+  loadFileList();
   loadFormationList();
-});
-
-loadFileList();
-loadFormationList();
-updateCounts();
+  updateCounts();
 
 });
 </script>

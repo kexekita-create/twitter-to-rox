@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>参加連絡フォーム</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+body{background:#1e1e1e;color:#fff;font-family:"Segoe UI";padding:20px}
+h2{margin-bottom:20px}
+label{display:block;margin-top:15px;font-size:16px}
+select,input,textarea{
+  width:300px;padding:8px;border-radius:6px;border:1px solid #666;
+  background:#2a2a2a;color:#fff;font-size:15px;
+}
+button{
+  margin-top:20px;padding:10px 20px;border:none;border-radius:6px;
+  background:#0078ff;color:#fff;font-size:16px;cursor:pointer;
+}
+#status{margin-top:20px;background:#333;padding:10px;border-radius:6px;display:none}
+</style>
+</head>
+
+<body>
+
+<h2>参加連絡フォーム</h2>
+
+<!-- 参加者 -->
+<label>参加者</label>
+<select id="memberSelect"></select>
+
+<!-- 日付 -->
+<label>日付</label>
+<select id="dateSelect"></select>
+
+<!-- 可否 -->
+<label>参加可否</label>
+<select id="statusSelect">
+  <option value="可">可</option>
+  <option value="否">否</option>
+</select>
+
+<!-- 備考 -->
+<label>備考</label>
+<textarea id="noteInput" rows="4"></textarea>
+
+<button id="sendBtn">送信</button>
+
+<div id="status"></div>
+
+<script>
+$(async function(){
+
+  /* -----------------------------
+     参加者一覧読み込み
+     ----------------------------- */
+  const resMembers = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
+  const files = await resMembers.json();
+
+  const memberFile = files.find(f => /^members-/i.test(f.name));
+  const memberJson = await (await fetch(memberFile.download_url)).json();
+
+  $("#memberSelect").append(
+    memberJson.members.map(m => `<option value="${m.name}">${m.name}（${m.job}）</option>`)
+  );
+
+  /* -----------------------------
+     日付一覧読み込み
+     ----------------------------- */
+  const resDates = await fetch("https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/dates.json");
+  const datesJson = await resDates.json();
+
+  datesJson.dates.forEach(d=>{
+    $("#dateSelect").append(`<option value="${d}">${d}</option>`);
+  });
+
+  /* -----------------------------
+     送信処理
+     ----------------------------- */
+  $("#sendBtn").on("click", async ()=>{
+
+    const name = $("#memberSelect").val();
+    const date = $("#dateSelect").val();
+    const status = $("#statusSelect").val();
+    const note = $("#noteInput").val();
+
+    const payload = {
+      type:"entry",
+      name,
+      date,
+      status,
+      note,
+      timestamp:new Date().toISOString()
+    };
+
+    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+
+    const text = await res.text();
+    $("#status").text(text).show();
+  });
+
+});
+</script>
+
+</body>
+</html>

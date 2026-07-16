@@ -25,22 +25,18 @@ button{
 
 <h2>参加連絡フォーム</h2>
 
-<!-- 参加者 -->
 <label>参加者</label>
 <select id="memberSelect"></select>
 
-<!-- 日付 -->
 <label>日付</label>
 <select id="dateSelect"></select>
 
-<!-- 可否 -->
 <label>参加可否</label>
 <select id="statusSelect">
   <option value="可">可</option>
   <option value="否">否</option>
 </select>
 
-<!-- 備考 -->
 <label>備考</label>
 <textarea id="noteInput" rows="4"></textarea>
 
@@ -51,12 +47,9 @@ button{
 <script>
 $(async function(){
 
-  /* -----------------------------
-     参加者一覧読み込み
-     ----------------------------- */
+  // 参加者読み込み
   const resMembers = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
   const files = await resMembers.json();
-
   const memberFile = files.find(f => /^members-/i.test(f.name));
   const memberJson = await (await fetch(memberFile.download_url)).json();
 
@@ -64,9 +57,7 @@ $(async function(){
     memberJson.members.map(m => `<option value="${m.name}">${m.name}（${m.job}）</option>`)
   );
 
-  /* -----------------------------
-     日付一覧読み込み
-     ----------------------------- */
+  // 日付読み込み
   const resDates = await fetch("https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/dates.json");
   const datesJson = await resDates.json();
 
@@ -74,9 +65,7 @@ $(async function(){
     $("#dateSelect").append(`<option value="${d}">${d}</option>`);
   });
 
-  /* -----------------------------
-     送信処理
-     ----------------------------- */
+  // 送信処理（修正版）
   $("#sendBtn").on("click", async ()=>{
 
     const name = $("#memberSelect").val();
@@ -85,6 +74,7 @@ $(async function(){
     const note = $("#noteInput").val();
 
     const payload = {
+      project: "twitter",   // ← これが必須だった
       type:"entry",
       name,
       date,

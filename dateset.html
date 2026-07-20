@@ -2,212 +2,244 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>参加確認一覧</title>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<title>出欠集計</title>
 
 <style>
-body{background:#1e1e1e;color:#fff;font-family:"Segoe UI";padding:20px}
-h2{margin-bottom:20px}
-table{border-collapse:collapse;margin-top:20px}
-th,td{
-  border:1px solid #555;padding:6px 10px;text-align:center;
-  min-width:120px;
-}
-td.note{background:#663300;color:#fff;cursor:pointer}
-button{
-  margin-top:10px;padding:8px 16px;border:none;border-radius:6px;
-  background:#0078ff;color:#fff;font-size:15px;cursor:pointer;
-}
-#status{margin-top:10px;background:#333;padding:10px;border-radius:6px;display:none}
+  body {
+    font-family: system-ui, sans-serif;
+    padding: 16px;
+    background: #202020;
+    color: #f0f0f0;
+  }
+
+  .summary {
+    margin-bottom: 12px;
+    background: #444;
+    padding: 8px 12px;
+    border-radius: 4px;
+  }
+  .summary-row {
+    display: flex;
+    gap: 16px;
+    margin: 2px 0;
+  }
+  .summary-label {
+    display: inline-block;
+    min-width: 80px;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 8px;
+    background: #303030;
+  }
+  thead th {
+    background: #000;
+    color: #fff;
+    padding: 6px 8px;
+    border: 1px solid #555;
+    text-align: center;
+  }
+  tbody td {
+    padding: 4px 8px;
+    border: 1px solid #555;
+    text-align: center;
+    cursor: pointer; /* ← 備考タップ対応 */
+  }
+  tbody td:first-child {
+    text-align: left;
+    background: #111;
+    cursor: default;
+  }
+
+  /* 備考ポップアップ */
+  .note-popup {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: #000;
+    color: #fff;
+    padding: 16px;
+    border: 1px solid #666;
+    border-radius: 8px;
+    z-index: 9999;
+    max-width: 80%;
+    max-height: 60%;
+    overflow-y: auto; /* ← 長文スクロール */
+    box-shadow: 0 0 12px rgba(0,0,0,0.7);
+  }
+  .note-close {
+    text-align: right;
+    margin-bottom: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #ccc;
+  }
 </style>
 </head>
 
 <body>
 
-<h2>参加確認一覧</h2>
+<h1>出欠集計</h1>
 
-<label>日付追加（カレンダー）</label>
-<input type="date" id="dateInput">
-<button id="addDateBtn">追加</button>
+<div class="summary">
+  <div class="summary-row">
+    <span class="summary-label">参加計</span>
+    <span id="sum-sanka">0</span>人
+  </div>
+  <div class="summary-row">
+    <span class="summary-label">不参加計</span>
+    <span id="sum-fusanka">0</span>人
+  </div>
+  <div class="summary-row">
+    <span class="summary-label">未記入計</span>
+    <span id="sum-mikinyu">0</span>人
+  </div>
+</div>
 
-<div id="status"></div>
-
-<div id="tableArea"></div>
+<table>
+  <thead>
+    <tr id="header-row">
+      <th>メンバー</th>
+    </tr>
+  </thead>
+  <tbody id="entry-body"></tbody>
+</table>
 
 <script>
-$(async function(){
+  /* 備考ポップアップ */
+  function showNotePopup(note) {
+    const div = document.createElement("div");
+    div.className = "note-popup";
 
-  const RAW = "https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main";
+    div.innerHTML = `
+      <div class="note-close">✕ 閉じる</div>
+      <div>${note}</div>
+    `;
 
-  async function fetchRaw(path){
-    const res = await fetch(`${RAW}/${path}`);
-    if(!res.ok){
-      throw new Error("raw fetch error: " + path);
-    }
-    return await res.json();
-  }
-
-  // 最新 members を Worker から取得
-  async function loadMembers(){
-    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        project:"twitter",
-        type:"list-data"
-      })
+    div.querySelector(".note-close").addEventListener("click", () => {
+      div.remove();
     });
 
-    if(!res.ok){
-      throw new Error("list-data error");
-    }
-
-    const json = await res.json();
-
-    const memberFiles = json.files.filter(name =>
-      /^members-\d{4}-\d{2}-\d{2}-v\d+\.json$/i.test(name)
-    );
-
-    if(memberFiles.length === 0){
-      return { members: [] };
-    }
-
-    memberFiles.sort((a,b)=> a < b ? 1 : -1);
-
-    return await fetchRaw(`data/${memberFiles[0]}`);
+    document.body.appendChild(div);
   }
 
-  async function loadDates(){
-    return await fetchRaw("data/dates.json");
+  /* 日付取得（?dates=2026-08-05,2026-08-08） */
+  function getTargetDates() {
+    const params = new URLSearchParams(location.search);
+    const raw = params.get("dates");
+    if (!raw) return [];
+    return raw.split(",").map(d => d.trim()).filter(d => d);
   }
 
-  // ★ entry 一覧は Worker の list-entry を使う（files.json 不使用）
-  async function loadEntries(){
+  /* 最新 entry ファイルを取得する（vXXX 自動判定） */
+  async function loadLatestEntry(date) {
+    const listUrl = `https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data/entry`;
+    const listRes = await fetch(listUrl);
+    const list = await listRes.json();
 
-    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        project:"twitter",
-        type:"list-entry"
-      })
-    });
-
-    if(!res.ok){
-      throw new Error("list-entry error");
-    }
-
-    const json = await res.json();
-
-    const grouped = {};
-
-    json.files.forEach(name=>{
-      const m = name.match(/^entry-(\d{4}-\d{2}-\d{2})_v(\d+)\.json$/);
-      if(!m) return;
-
-      const date    = m[1];
-      const version = parseInt(m[2],10);
-
-      if(!grouped[date] || grouped[date].version < version){
-        grouped[date] = { name, version };
-      }
-    });
-
-    const all = [];
-
-    for(const date in grouped){
-      const j = await fetchRaw(`data/entry/${grouped[date].name}`);
-
-      if(Array.isArray(j.entries)){
-        j.entries.forEach(e=>{
-          all.push({
-            name:      e.name,
-            status:    e.status,
-            note:      e.note,
-            timestamp: e.timestamp,
-            date:      date
-          });
-        });
-      }
-    }
-
-    return all;
-  }
-
-  // 日付追加ボタン
-  $("#addDateBtn").on("click", async ()=>{
-    const d = $("#dateInput").val();
-    if(!d){
-      $("#status").text("日付を選択してください").show();
-      return;
-    }
-
-    try{
-      const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          project:"twitter",
-          type:"dates",
-          date:d
-        })
+    const files = list
+      .filter(f => f.name.startsWith(`entry-${date}_v`) && f.name.endsWith(".json"))
+      .sort((a, b) => {
+        const av = parseInt(a.name.match(/_v(\d+)\.json$/)[1]);
+        const bv = parseInt(b.name.match(/_v(\d+)\.json$/)[1]);
+        return bv - av;
       });
 
-      const text = await res.text();
-      $("#status").text(text).show();
+    if (files.length === 0) return [];
 
-      await renderTable();
-    }catch(e){
-      $("#status").text("エラー: " + e.message).show();
-    }
-  });
+    const rawRes = await fetch(files[0].download_url);
+    const json = await rawRes.json();
+    return json.entries || [];
+  }
 
-  async function renderTable(){
+  async function main() {
+    const dates = getTargetDates();
+    if (dates.length === 0) return;
 
-    const datesJson   = await loadDates();
-    const membersJson = await loadMembers();
-    const entries     = await loadEntries();
-
-    let html = "<table><tr><th>メンバー</th>";
-
-    datesJson.dates.forEach(d=>{
-      html += `<th>${d}</th>`;
+    /* 日付ヘッダー生成 */
+    const headerRow = document.getElementById("header-row");
+    dates.forEach(date => {
+      const th = document.createElement("th");
+      th.textContent = date.replace(/-/g, "/");
+      headerRow.appendChild(th);
     });
-    html += "</tr>";
 
-    membersJson.members.forEach(m=>{
-      html += `<tr><td>${m.name}</td>`;
+    /* 全日付の entry を読み込む */
+    const entriesByDate = {};
+    for (const date of dates) {
+      entriesByDate[date] = await loadLatestEntry(date);
+    }
 
-      datesJson.dates.forEach(d=>{
-        const e = entries.find(x => x.name===m.name && x.date===d);
+    /* メンバー一覧（空白除外） */
+    const memberSet = new Set();
+    for (const date of dates) {
+      for (const e of entriesByDate[date]) {
+        if (!e.name || e.name.trim() === "") continue;
+        memberSet.add(e.name.trim());
+      }
+    }
+    const members = Array.from(memberSet);
 
-        if(!e){
-          html += "<td>-</td>";
-        }else{
-          if(e.note){
-            html += `<td class="note" title="${e.note}">${e.status}</td>`;
-          }else{
-            html += `<td>${e.status}</td>`;
+    /* 集計 */
+    let sumSanka = 0;
+    let sumFusanka = 0;
+    let sumMikinyu = 0;
+
+    for (const date of dates) {
+      for (const e of entriesByDate[date]) {
+        if (!e.name || e.name.trim() === "") continue;
+        const status = e.status || "";
+        if (status === "参加") sumSanka++;
+        else if (status === "不参加") sumFusanka++;
+        else sumMikinyu++;
+      }
+    }
+
+    document.getElementById("sum-sanka").textContent = sumSanka;
+    document.getElementById("sum-fusanka").textContent = sumFusanka;
+    document.getElementById("sum-mikinyu").textContent = sumMikinyu;
+
+    /* クロス表生成 */
+    const tbody = document.getElementById("entry-body");
+    tbody.innerHTML = "";
+
+    members.forEach(name => {
+      const tr = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      tdName.textContent = name;
+      tr.appendChild(tdName);
+
+      dates.forEach(date => {
+        const td = document.createElement("td");
+
+        const list = entriesByDate[date].filter(e => (e.name || "").trim() === name);
+        if (list.length === 0) {
+          td.textContent = "";
+        } else {
+          const e = list[list.length - 1];
+          const status = e.status || "未記入";
+          td.textContent = status;
+
+          /* 備考タップで開く */
+          if (e.note && e.note.trim() !== "") {
+            td.addEventListener("click", () => {
+              showNotePopup(e.note);
+            });
           }
         }
+
+        tr.appendChild(td);
       });
 
-      html += "</tr>";
+      tbody.appendChild(tr);
     });
-
-    html += "</table>";
-
-    $("#tableArea").html(html);
   }
 
-  // 初期表示
-  try{
-    await renderTable();
-  }catch(e){
-    $("#status").text("初期表示エラー: " + e.message).show();
-  }
-
-});
+  main();
 </script>
 
 </body>

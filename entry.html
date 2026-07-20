@@ -48,27 +48,25 @@ button{
 $(async function(){
 
   /* -----------------------------
-     最新 members を自動検出（前の仕様を完全復活）
+     最新 members を GitHub API で読み込む（高速）
      ----------------------------- */
   async function loadMembers(){
-    const res = await fetch(
-      "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data"
-    );
-    const files = await res.json();
+    const apiUrl =
+      "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data";
 
-    // members-YYYY-MM-DD-vXXX.json を全部拾う
+    const files = await (await fetch(apiUrl)).json();
+
     const memberFiles = files.filter(f => /^members-.*\.json$/i.test(f.name));
 
-    // 最新版を選ぶ（名前で降順ソート）
     memberFiles.sort((a,b)=> a.name < b.name ? 1 : -1);
 
     const latest = memberFiles[0];
 
-    // raw で読み込む（壊れない）
-    const rawUrl =
-      `https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${latest.name}`;
+    const info = await (await fetch(
+      `https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data/${latest.name}`
+    )).json();
 
-    return await (await fetch(rawUrl)).json();
+    return await (await fetch(info.download_url)).json();
   }
 
   /* -----------------------------
@@ -81,19 +79,24 @@ $(async function(){
   );
 
   /* -----------------------------
-     日付読み込み（raw）
+     日付読み込み（GitHub API）
      ----------------------------- */
-  const resDates = await fetch(
-    "https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/dates.json"
-  );
-  const datesJson = await resDates.json();
+  async function loadDates(){
+    const info = await (await fetch(
+      "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data/dates.json"
+    )).json();
+
+    return await (await fetch(info.download_url)).json();
+  }
+
+  const datesJson = await loadDates();
 
   datesJson.dates.forEach(d=>{
     $("#dateSelect").append(`<option value="${d}">${d}</option>`);
   });
 
   /* -----------------------------
-     送信処理（v001 新仕様）
+     送信処理（Worker に entry を送る）
      ----------------------------- */
   $("#sendBtn").on("click", async ()=>{
 
@@ -104,7 +107,7 @@ $(async function(){
 
     const payload = {
       project: "twitter",
-      type: "entry_v001",
+      type: "entry",
       name,
       date,
       status,

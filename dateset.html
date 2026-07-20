@@ -18,7 +18,6 @@ button{
   margin-top:10px;padding:8px 16px;border:none;border-radius:6px;
   background:#0078ff;color:#fff;font-size:15px;cursor:pointer;
 }
-#calendar{margin-top:10px}
 #status{margin-top:10px;background:#333;padding:10px;border-radius:6px;display:none}
 </style>
 </head>
@@ -27,21 +26,19 @@ button{
 
 <h2>参加確認一覧</h2>
 
-<!-- 日付追加 -->
 <label>日付追加（カレンダー）</label>
 <input type="date" id="dateInput">
 <button id="addDateBtn">追加</button>
 
 <div id="status"></div>
 
-<!-- 一覧表 -->
 <div id="tableArea"></div>
 
 <script>
 $(async function(){
 
   /* -----------------------------
-     日付読み込み（raw：壊れない）
+     日付読み込み（raw）
      ----------------------------- */
   async function loadDates(){
     const res = await fetch(
@@ -51,7 +48,7 @@ $(async function(){
   }
 
   /* -----------------------------
-     参加者読み込み（raw：壊れない）
+     参加者読み込み（raw）
      ----------------------------- */
   async function loadMembers(){
     const res = await fetch(
@@ -61,24 +58,21 @@ $(async function(){
   }
 
   /* -----------------------------
-     参加連絡一覧読み込み（新階層＋複数人対応）
+     参加連絡一覧読み込み（新階層＋v001）
      ----------------------------- */
   async function loadEntries(){
 
-    // GitHub API でフォルダ一覧を取得（壊れない）
     const res = await fetch(
       "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data/entry"
     );
     const files = await res.json();
 
-    // 新仕様：entry-YYYY-MM-DD_v001.json
     const entryFiles = files.filter(f => /^entry-.*_v001\.json$/i.test(f.name));
 
     const allEntries = [];
 
     for(const f of entryFiles){
 
-      // raw で読み込む（壊れない）
       const rawUrl =
         `https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/entry/${f.name}`;
 
@@ -101,7 +95,7 @@ $(async function(){
   }
 
   /* -----------------------------
-     日付追加（修正版）
+     日付追加
      ----------------------------- */
   $("#addDateBtn").on("click", async ()=>{
     const d = $("#dateInput").val();
@@ -127,7 +121,7 @@ $(async function(){
   });
 
   /* -----------------------------
-     一覧表描画（新仕様）
+     一覧描画
      ----------------------------- */
   async function renderTable(){
 
@@ -167,7 +161,6 @@ $(async function(){
     $("#tableArea").html(html);
   }
 
-  /* 初期表示 */
   renderTable();
 
 });

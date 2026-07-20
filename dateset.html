@@ -173,7 +173,7 @@ $(async function(){
     const membersJson = await loadMembers();
     const entries     = await loadEntries();
 
-    /* ★ 日付ごとの小計（未記入＝"-" または 空欄） */
+    /* ★ 日付ごとの小計（未記入＝ "-", "", null, undefined） */
     let dailySummary = {};
     datesJson.dates.forEach(d=>{
       dailySummary[d] = { sanka:0, fusanka:0, mikinyu:0 };
@@ -183,7 +183,8 @@ $(async function(){
       if(!e.name || e.name.trim()==="") return;
       if(!datesJson.dates.includes(e.date)) return;
 
-      const s = (e.status || "").trim();
+      const raw = e.status;
+      const s = (raw === null || raw === undefined) ? "" : String(raw).trim();
 
       if(s === "参加") {
         dailySummary[e.date].sanka++;

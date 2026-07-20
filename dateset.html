@@ -81,18 +81,31 @@ $(async function(){
     return await fetchRaw("data/dates.json");
   }
 
-  // entry 一覧は data/entry/files.json から
+  // ★ entry 一覧は Worker の list-entry を使う（files.json 不使用）
   async function loadEntries(){
 
-    const list = await fetchRaw("data/entry/files.json");
+    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        project:"twitter",
+        type:"list-entry"
+      })
+    });
+
+    if(!res.ok){
+      throw new Error("list-entry error");
+    }
+
+    const json = await res.json();
 
     const grouped = {};
 
-    list.entries.forEach(name=>{
+    json.files.forEach(name=>{
       const m = name.match(/^entry-(\d{4}-\d{2}-\d{2})_v(\d+)\.json$/);
       if(!m) return;
 
-      const date = m[1];
+      const date    = m[1];
       const version = parseInt(m[2],10);
 
       if(!grouped[date] || grouped[date].version < version){
@@ -108,11 +121,11 @@ $(async function(){
       if(Array.isArray(j.entries)){
         j.entries.forEach(e=>{
           all.push({
-            name: e.name,
-            status: e.status,
-            note: e.note,
+            name:      e.name,
+            status:    e.status,
+            note:      e.note,
             timestamp: e.timestamp,
-            date: date
+            date:      date
           });
         });
       }

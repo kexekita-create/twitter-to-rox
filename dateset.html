@@ -38,6 +38,29 @@ button{
 $(async function(){
 
   /* -----------------------------
+     最新 members を自動検出（前の仕様を完全復活）
+     ----------------------------- */
+  async function loadMembers(){
+    const res = await fetch(
+      "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data"
+    );
+    const files = await res.json();
+
+    // members-YYYY-MM-DD-vXXX.json を全部拾う
+    const memberFiles = files.filter(f => /^members-.*\.json$/i.test(f.name));
+
+    // 最新版を選ぶ（名前で降順ソート）
+    memberFiles.sort((a,b)=> a.name < b.name ? 1 : -1);
+
+    const latest = memberFiles[0];
+
+    const rawUrl =
+      `https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${latest.name}`;
+
+    return await (await fetch(rawUrl)).json();
+  }
+
+  /* -----------------------------
      日付読み込み（raw）
      ----------------------------- */
   async function loadDates(){
@@ -48,17 +71,7 @@ $(async function(){
   }
 
   /* -----------------------------
-     参加者読み込み（raw）
-     ----------------------------- */
-  async function loadMembers(){
-    const res = await fetch(
-      "https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/members.json"
-    );
-    return await res.json();
-  }
-
-  /* -----------------------------
-     参加連絡一覧読み込み（新階層＋v001）
+     entry_v001 の一覧読み込み（新仕様）
      ----------------------------- */
   async function loadEntries(){
 
@@ -67,6 +80,7 @@ $(async function(){
     );
     const files = await res.json();
 
+    // entry-YYYY-MM-DD_v001.json のみ対象
     const entryFiles = files.filter(f => /^entry-.*_v001\.json$/i.test(f.name));
 
     const allEntries = [];

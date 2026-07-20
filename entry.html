@@ -48,19 +48,40 @@ button{
 $(async function(){
 
   /* -----------------------------
-     参加者読み込み（raw：壊れない）
+     最新 members を自動検出（前の仕様を完全復活）
      ----------------------------- */
-  const resMembers = await fetch(
-    "https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/members.json"
-  );
-  const memberJson = await resMembers.json();
+  async function loadMembers(){
+    const res = await fetch(
+      "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data"
+    );
+    const files = await res.json();
+
+    // members-YYYY-MM-DD-vXXX.json を全部拾う
+    const memberFiles = files.filter(f => /^members-.*\.json$/i.test(f.name));
+
+    // 最新版を選ぶ（名前で降順ソート）
+    memberFiles.sort((a,b)=> a.name < b.name ? 1 : -1);
+
+    const latest = memberFiles[0];
+
+    // raw で読み込む（壊れない）
+    const rawUrl =
+      `https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/${latest.name}`;
+
+    return await (await fetch(rawUrl)).json();
+  }
+
+  /* -----------------------------
+     参加者読み込み
+     ----------------------------- */
+  const memberJson = await loadMembers();
 
   $("#memberSelect").append(
     memberJson.members.map(m => `<option value="${m.name}">${m.name}（${m.job}）</option>`)
   );
 
   /* -----------------------------
-     日付読み込み（raw：壊れない）
+     日付読み込み（raw）
      ----------------------------- */
   const resDates = await fetch(
     "https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/dates.json"

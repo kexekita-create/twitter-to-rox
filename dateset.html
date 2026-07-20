@@ -37,75 +37,76 @@ button{
 <script>
 $(async function(){
 
+  const BASE = "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents";
+
   /* -----------------------------
-     最新 members を GitHub API で読み込む（高速）
+     GitHub API → download_url → JSON
+     ----------------------------- */
+  async function fetchJSON(path){
+    const info = await (await fetch(`${BASE}/${path}`)).json();
+    return await (await fetch(info.download_url)).json();
+  }
+
+  /* -----------------------------
+     最新 members 読み込み
      ----------------------------- */
   async function loadMembers(){
-    const apiUrl =
-      "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data";
-
-    const files = await (await fetch(apiUrl)).json();
-
+    const files = await (await fetch(`${BASE}/data`)).json();
     const memberFiles = files.filter(f => /^members-.*\.json$/i.test(f.name));
-
     memberFiles.sort((a,b)=> a.name < b.name ? 1 : -1);
-
-    const latest = memberFiles[0];
-
-    const info = await (await fetch(
-      `https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data/${latest.name}`
-    )).json();
-
-    return await (await fetch(info.download_url)).json();
+    return await fetchJSON(`data/${memberFiles[0].name}`);
   }
 
   /* -----------------------------
-     日付読み込み（GitHub API）
+     日付読み込み
      ----------------------------- */
   async function loadDates(){
-    const info = await (await fetch(
-      "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data/dates.json"
-    )).json();
-
-    return await (await fetch(info.download_url)).json();
+    return await fetchJSON("data/dates.json");
   }
 
   /* -----------------------------
-     entry_v001 の一覧読み込み（GitHub API）
+     entry 最新 version 読み込み
      ----------------------------- */
   async function loadEntries(){
 
-    const apiUrl =
-      "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data/entry";
+    const files = await (await fetch(`${BASE}/data/entry`)).json();
 
-    const files = await (await fetch(apiUrl)).json();
+    const entryFiles = files.filter(f => /^entry-.*_v\d+\.json$/i.test(f.name));
 
-    const entryFiles = files.filter(f => /^entry-.*_v001\.json$/i.test(f.name));
+    const grouped = {};
 
-    const allEntries = [];
+    entryFiles.forEach(f=>{
+      const m = f.name.match(/^entry-(\d{4}-\d{2}-\d{2})_v(\d+)\.json$/);
+      if(!m) return;
 
-    for(const f of entryFiles){
+      const date = m[1];
+      const version = parseInt(m[2],10);
 
-      const info = await (await fetch(
-        `https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data/entry/${f.name}`
-      )).json();
+      if(!grouped[date] || grouped[date].version < version){
+        grouped[date] = { file:f, version };
+      }
+    });
 
-      const j = await (await fetch(info.download_url)).json();
+    const all = [];
 
-      if (Array.isArray(j.entries)) {
-        j.entries.forEach(e => {
-          allEntries.push({
+    for(const date in grouped){
+      const f = grouped[date].file;
+      const j = await fetchJSON(`data/entry/${f.name}`);
+
+      if(Array.isArray(j.entries)){
+        j.entries.forEach(e=>{
+          all.push({
             name: e.name,
             status: e.status,
             note: e.note,
             timestamp: e.timestamp,
-            date: f.name.replace("entry-", "").replace("_v001.json", "")
+            date: date
           });
         });
       }
     }
 
-    return allEntries;
+    return all;
   }
 
   /* -----------------------------
@@ -122,15 +123,13 @@ $(async function(){
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        project: "twitter",
-        type: "dates",
-        date: d
+        project:"twitter",
+        type:"dates",
+        date:d
       })
     });
 
-    const text = await res.text();
-    $("#status").text(text).show();
-
+    $("#status").text(await res.text()).show();
     renderTable();
   });
 

@@ -58,22 +58,37 @@ $(async function(){
     return await (await fetch(memberFile.download_url)).json();
   }
 
-  /* -----------------------------
-     参加連絡一覧読み込み
+/* -----------------------------
+     参加連絡一覧読み込み（複数人対応版）
      ----------------------------- */
-  async function loadEntries(){
-    const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
-    const files = await res.json();
+async function loadEntries(){
+  const res = await fetch("https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data");
+  const files = await res.json();
 
-    const entryFiles = files.filter(f => /^entry-/i.test(f.name));
+  const entryFiles = files.filter(f => /^entry-/i.test(f.name));
 
-    const entries = [];
-    for(const f of entryFiles){
-      const j = await (await fetch(f.download_url)).json();
-      entries.push(j);
+  const allEntries = [];
+
+  for(const f of entryFiles){
+    const j = await (await fetch(f.download_url)).json();
+
+    // ★ entries 配列を展開して追加
+    if (Array.isArray(j.entries)) {
+      j.entries.forEach(e => {
+        allEntries.push({
+          name: e.name,
+          status: e.status,
+          note: e.note,
+          timestamp: e.timestamp,
+          date: f.name.replace("entry-", "").replace(".json", "")
+        });
+      });
     }
-    return entries;
   }
+
+  return allEntries;
+}
+
 
   /* -----------------------------
      日付追加（修正版）

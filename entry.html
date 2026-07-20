@@ -64,7 +64,10 @@ $(async function(){
   datesJson.dates.forEach(d=>{
     $("#dateSelect").append(`<option value="${d}">${d}</option>`);
   });
-
+  
+function utf8(str){
+  return decodeURIComponent(encodeURIComponent(str));
+}
   // 送信処理（修正版）
   $("#sendBtn").on("click", async ()=>{
 
@@ -73,15 +76,15 @@ $(async function(){
     const status = $("#statusSelect").val();
     const note = $("#noteInput").val();
 
-    const payload = {
-      project: "twitter",   // ← これが必須だった
-      type:"entry",
-      name,
-      date,
-      status,
-      note,
-      timestamp:new Date().toISOString()
-    };
+const payload = {
+  project: "twitter",
+  type:"entry",
+  name: utf8($("#memberSelect").val()),
+  date,
+  status: utf8($("#statusSelect").val()),
+  note: utf8($("#noteInput").val()),
+  timestamp:new Date().toISOString()
+};
 
     const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
       method:"POST",

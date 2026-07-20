@@ -53,9 +53,19 @@ $(async function(){
     return await (await fetch(`${RAW}/${path}`)).json();
   }
 
+  /* 最新 members を data 直下から選ぶ */
   async function loadMembers(){
-    const list = await fetchRaw("data/files.json");
-    return await fetchRaw(`data/${list.members[0]}`);
+    const files = await fetchRaw("data/entry/files.json");
+
+    const memberFiles = files.entries.filter(f =>
+      /^members-\d{4}-\d{2}-\d{2}-v\d+\.json$/i.test(f)
+    );
+
+    if(memberFiles.length === 0) return { members: [] };
+
+    memberFiles.sort((a,b)=> a < b ? 1 : -1);
+
+    return await fetchRaw(`data/${memberFiles[0]}`);
   }
 
   async function loadDates(){

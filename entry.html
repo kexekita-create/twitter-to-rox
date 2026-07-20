@@ -48,53 +48,20 @@ button{
 $(async function(){
 
   const RAW = "https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main";
-  const API = "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents";
 
-  /* -----------------------------
-     raw → JSON（絶対壊れない）
-     ----------------------------- */
   async function fetchRaw(path){
     return await (await fetch(`${RAW}/${path}`)).json();
   }
 
-  /* -----------------------------
-     members（APIで一覧 → rawで中身）
-     ----------------------------- */
   async function loadMembers(){
-    const files = await (await fetch(`${API}/data`)).json();
-    const memberFiles = files.filter(f => /^members-.*\.json$/i.test(f.name));
-    memberFiles.sort((a,b)=> a.name < b.name ? 1 : -1);
-    return await fetchRaw(`data/${memberFiles[0].name}`);
+    const list = await fetchRaw("data/files.json");
+    return await fetchRaw(`data/${list.members[0]}`);
   }
 
-  /* -----------------------------
-     dates（raw）
-     ----------------------------- */
   async function loadDates(){
     return await fetchRaw("data/dates.json");
   }
 
-  /* -----------------------------
-     entry 最新 version 読み込み（API → raw）
-     ----------------------------- */
-  async function loadLatestEntry(date){
-
-    const files = await (await fetch(`${API}/data/entry`)).json();
-
-    const entryFiles = files.filter(f => f.name.startsWith(`entry-${date}_v`));
-
-    if(entryFiles.length === 0) return null;
-
-    entryFiles.sort((a,b)=> a.name < b.name ? 1 : -1);
-
-    const latest = entryFiles[0].name;
-
-    return await fetchRaw(`data/entry/${latest}`);
-  }
-
-  /* -----------------------------
-     初期化：メンバーと日付を読み込む
-     ----------------------------- */
   async function init(){
 
     const membersJson = await loadMembers();
@@ -109,9 +76,6 @@ $(async function(){
     });
   }
 
-  /* -----------------------------
-     送信（Worker）
-     ----------------------------- */
   $("#sendBtn").on("click", async ()=>{
 
     const name = $("#memberSelect").val();

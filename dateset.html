@@ -37,31 +37,30 @@ button{
 <script>
 $(async function(){
 
-  const BASE = "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents";
+  const RAW = "https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main";
 
   /* -----------------------------
-     GitHub API → download_url → JSON
+     raw → JSON
      ----------------------------- */
-  async function fetchJSON(path){
-    const info = await (await fetch(`${BASE}/${path}`)).json();
-    return await (await fetch(info.download_url)).json();
+  async function fetchRaw(path){
+    return await (await fetch(`${RAW}/${path}`)).json();
   }
 
   /* -----------------------------
      最新 members 読み込み
      ----------------------------- */
   async function loadMembers(){
-    const files = await (await fetch(`${BASE}/data`)).json();
-    const memberFiles = files.filter(f => /^members-.*\.json$/i.test(f.name));
-    memberFiles.sort((a,b)=> a.name < b.name ? 1 : -1);
-    return await fetchJSON(`data/${memberFiles[0].name}`);
+    const files = await (await fetch(`${RAW}/data/files.json`)).json();
+    const memberFiles = files.members;
+    memberFiles.sort((a,b)=> a < b ? 1 : -1);
+    return await fetchRaw(`data/${memberFiles[0]}`);
   }
 
   /* -----------------------------
      日付読み込み
      ----------------------------- */
   async function loadDates(){
-    return await fetchJSON("data/dates.json");
+    return await fetchRaw("data/dates.json");
   }
 
   /* -----------------------------
@@ -69,29 +68,26 @@ $(async function(){
      ----------------------------- */
   async function loadEntries(){
 
-    const files = await (await fetch(`${BASE}/data/entry`)).json();
-
-    const entryFiles = files.filter(f => /^entry-.*_v\d+\.json$/i.test(f.name));
+    const files = await (await fetch(`${RAW}/data/entry/files.json`)).json();
 
     const grouped = {};
 
-    entryFiles.forEach(f=>{
-      const m = f.name.match(/^entry-(\d{4}-\d{2}-\d{2})_v(\d+)\.json$/);
+    files.forEach(name=>{
+      const m = name.match(/^entry-(\d{4}-\d{2}-\d{2})_v(\d+)\.json$/);
       if(!m) return;
 
       const date = m[1];
       const version = parseInt(m[2],10);
 
       if(!grouped[date] || grouped[date].version < version){
-        grouped[date] = { file:f, version };
+        grouped[date] = { name, version };
       }
     });
 
     const all = [];
 
     for(const date in grouped){
-      const f = grouped[date].file;
-      const j = await fetchJSON(`data/entry/${f.name}`);
+      const j = await fetchRaw(`data/entry/${grouped[date].name}`);
 
       if(Array.isArray(j.entries)){
         j.entries.forEach(e=>{

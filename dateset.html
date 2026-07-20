@@ -38,49 +38,52 @@ button{
 $(async function(){
 
   const RAW = "https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main";
+  const API = "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents";
 
   /* -----------------------------
-     raw → JSON
+     raw → JSON（絶対壊れない）
      ----------------------------- */
   async function fetchRaw(path){
     return await (await fetch(`${RAW}/${path}`)).json();
   }
 
   /* -----------------------------
-     最新 members 読み込み
+     members（APIで一覧 → rawで中身）
      ----------------------------- */
   async function loadMembers(){
-    const files = await (await fetch(`${RAW}/data/files.json`)).json();
-    const memberFiles = files.members;
-    memberFiles.sort((a,b)=> a < b ? 1 : -1);
-    return await fetchRaw(`data/${memberFiles[0]}`);
+    const files = await (await fetch(`${API}/data`)).json();
+    const memberFiles = files.filter(f => /^members-.*\.json$/i.test(f.name));
+    memberFiles.sort((a,b)=> a.name < b.name ? 1 : -1);
+    return await fetchRaw(`data/${memberFiles[0].name}`);
   }
 
   /* -----------------------------
-     日付読み込み
+     dates（raw）
      ----------------------------- */
   async function loadDates(){
     return await fetchRaw("data/dates.json");
   }
 
   /* -----------------------------
-     entry 最新 version 読み込み
+     entry（APIで一覧 → rawで中身）
      ----------------------------- */
   async function loadEntries(){
 
-    const files = await (await fetch(`${RAW}/data/entry/files.json`)).json();
+    const files = await (await fetch(`${API}/data/entry`)).json();
+
+    const entryFiles = files.filter(f => /^entry-.*_v\d+\.json$/i.test(f.name));
 
     const grouped = {};
 
-    files.forEach(name=>{
-      const m = name.match(/^entry-(\d{4}-\d{2}-\d{2})_v(\d+)\.json$/);
+    entryFiles.forEach(f=>{
+      const m = f.name.match(/^entry-(\d{4}-\d{2}-\d{2})_v(\d+)\.json$/);
       if(!m) return;
 
       const date = m[1];
       const version = parseInt(m[2],10);
 
       if(!grouped[date] || grouped[date].version < version){
-        grouped[date] = { name, version };
+        grouped[date] = { name:f.name, version };
       }
     });
 

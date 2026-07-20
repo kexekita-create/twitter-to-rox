@@ -8,17 +8,37 @@
 <style>
 body{background:#1e1e1e;color:#fff;font-family:"Segoe UI";padding:20px}
 h2{margin-bottom:20px}
-table{border-collapse:collapse;margin-top:20px}
+table{border-collapse:collapse;margin-top:20px;width:100%}
 th,td{
   border:1px solid #555;padding:6px 10px;text-align:center;
   min-width:120px;
 }
 td.note{background:#663300;color:#fff;cursor:pointer}
-button{
-  margin-top:10px;padding:8px 16px;border:none;border-radius:6px;
-  background:#0078ff;color:#fff;font-size:15px;cursor:pointer;
+
+/* 備考ポップアップ */
+.note-popup {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #000;
+  color: #fff;
+  padding: 16px;
+  border: 1px solid #666;
+  border-radius: 8px;
+  z-index: 9999;
+  max-width: 80%;
+  max-height: 60%;
+  overflow-y: auto;
+  box-shadow: 0 0 12px rgba(0,0,0,0.7);
 }
-#status{margin-top:10px;background:#333;padding:10px;border-radius:6px;display:none}
+.note-close {
+  text-align: right;
+  margin-bottom: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #ccc;
+}
 </style>
 </head>
 
@@ -31,49 +51,41 @@ button{
 <button id="addDateBtn">追加</button>
 
 <div id="status"></div>
-
 <div id="tableArea"></div>
 
 <script>
+function showNotePopup(note){
+  const div = document.createElement("div");
+  div.className = "note-popup";
+  div.innerHTML = `
+    <div class="note-close">✕ 閉じる</div>
+    <div>${note}</div>
+  `;
+  div.querySelector(".note-close").addEventListener("click", () => div.remove());
+  document.body.appendChild(div);
+}
+
 $(async function(){
 
   const RAW = "https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main";
 
   async function fetchRaw(path){
     const res = await fetch(`${RAW}/${path}`);
-    if(!res.ok){
-      throw new Error("raw fetch error: " + path);
-    }
+    if(!res.ok) throw new Error("raw fetch error: " + path);
     return await res.json();
   }
 
-  // 最新 members を Worker から取得
   async function loadMembers(){
     const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        project:"twitter",
-        type:"list-data"
-      })
+      body:JSON.stringify({ project:"twitter", type:"list-data" })
     });
-
-    if(!res.ok){
-      throw new Error("list-data error");
-    }
-
     const json = await res.json();
-
     const memberFiles = json.files.filter(name =>
       /^members-\d{4}-\d{2}-\d{2}-v\d+\.json$/i.test(name)
     );
-
-    if(memberFiles.length === 0){
-      return { members: [] };
-    }
-
     memberFiles.sort((a,b)=> a < b ? 1 : -1);
-
     return await fetchRaw(`data/${memberFiles[0]}`);
   }
 
@@ -81,60 +93,43 @@ $(async function(){
     return await fetchRaw("data/dates.json");
   }
 
-  // ★ entry 一覧は Worker の list-entry を使う（files.json 不使用）
   async function loadEntries(){
-
     const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        project:"twitter",
-        type:"list-entry"
-      })
+      body:JSON.stringify({ project:"twitter", type:"list-entry" })
     });
-
-    if(!res.ok){
-      throw new Error("list-entry error");
-    }
-
     const json = await res.json();
 
     const grouped = {};
-
     json.files.forEach(name=>{
       const m = name.match(/^entry-(\d{4}-\d{2}-\d{2})_v(\d+)\.json$/);
       if(!m) return;
-
-      const date    = m[1];
+      const date = m[1];
       const version = parseInt(m[2],10);
-
       if(!grouped[date] || grouped[date].version < version){
         grouped[date] = { name, version };
       }
     });
 
     const all = [];
-
     for(const date in grouped){
       const j = await fetchRaw(`data/entry/${grouped[date].name}`);
-
       if(Array.isArray(j.entries)){
         j.entries.forEach(e=>{
           all.push({
-            name:      e.name,
-            status:    e.status,
-            note:      e.note,
+            name: e.name,
+            status: e.status,
+            note: e.note,
             timestamp: e.timestamp,
-            date:      date
+            date: date
           });
         });
       }
     }
-
     return all;
   }
 
-  // 日付追加ボタン
   $("#addDateBtn").on("click", async ()=>{
     const d = $("#dateInput").val();
     if(!d){
@@ -146,16 +141,10 @@ $(async function(){
       const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          project:"twitter",
-          type:"dates",
-          date:d
-        })
+        body:JSON.stringify({ project:"twitter", type:"dates", date:d })
       });
-
       const text = await res.text();
       $("#status").text(text).show();
-
       await renderTable();
     }catch(e){
       $("#status").text("エラー: " + e.message).show();
@@ -168,14 +157,52 @@ $(async function(){
     const membersJson = await loadMembers();
     const entries     = await loadEntries();
 
-    let html = "<table><tr><th>メンバー</th>";
+    /* ★ 日付ごとの小計 */
+    let dailySummary = {};
+    datesJson.dates.forEach(d=>{
+      dailySummary[d] = { sanka:0, fusanka:0, mikinyu:0 };
+    });
 
+    entries.forEach(e=>{
+      if(!e.name || e.name.trim()==="") return;
+      if(!datesJson.dates.includes(e.date)) return;
+
+      const s = e.status || "";
+      if(s==="参加") dailySummary[e.date].sanka++;
+      else if(s==="不参加") dailySummary[e.date].fusanka++;
+      else dailySummary[e.date].mikinyu++;
+    });
+
+    /* ★ テーブル生成（ヘッダに小計を入れる） */
+    let html = "<table>";
+
+    html += "<tr><th>参加計</th>";
+    datesJson.dates.forEach(d=>{
+      html += `<th>${dailySummary[d].sanka}人</th>`;
+    });
+    html += "</tr>";
+
+    html += "<tr><th>不参加計</th>";
+    datesJson.dates.forEach(d=>{
+      html += `<th>${dailySummary[d].fusanka}人</th>`;
+    });
+    html += "</tr>";
+
+    html += "<tr><th>未記入計</th>";
+    datesJson.dates.forEach(d=>{
+      html += `<th>${dailySummary[d].mikinyu}人</th>`;
+    });
+    html += "</tr>";
+
+    html += "<tr><th>メンバー</th>";
     datesJson.dates.forEach(d=>{
       html += `<th>${d}</th>`;
     });
     html += "</tr>";
 
     membersJson.members.forEach(m=>{
+      if(!m.name || m.name.trim()==="") return;
+
       html += `<tr><td>${m.name}</td>`;
 
       datesJson.dates.forEach(d=>{
@@ -185,7 +212,7 @@ $(async function(){
           html += "<td>-</td>";
         }else{
           if(e.note){
-            html += `<td class="note" title="${e.note}">${e.status}</td>`;
+            html += `<td class="note" data-note="${e.note}">${e.status}</td>`;
           }else{
             html += `<td>${e.status}</td>`;
           }
@@ -198,14 +225,14 @@ $(async function(){
     html += "</table>";
 
     $("#tableArea").html(html);
+
+    $("#tableArea .note").on("click", function(){
+      const note = $(this).data("note");
+      if(note) showNotePopup(note);
+    });
   }
 
-  // 初期表示
-  try{
-    await renderTable();
-  }catch(e){
-    $("#status").text("初期表示エラー: " + e.message).show();
-  }
+  await renderTable();
 
 });
 </script>

@@ -53,15 +53,22 @@ $(async function(){
     return await (await fetch(`${RAW}/${path}`)).json();
   }
 
-  /* 最新 members を data 直下から選ぶ */
+  // 最新 members を Worker から取得
   async function loadMembers(){
-    const files = await fetchRaw("data/entry/files.json");
+    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        project:"twitter",
+        type:"list-data"
+      })
+    });
 
-    const memberFiles = files.entries.filter(f =>
-      /^members-\d{4}-\d{2}-\d{2}-v\d+\.json$/i.test(f)
+    const json = await res.json();
+
+    const memberFiles = json.files.filter(name =>
+      /^members-\d{4}-\d{2}-\d{2}-v\d+\.json$/i.test(name)
     );
-
-    if(memberFiles.length === 0) return { members: [] };
 
     memberFiles.sort((a,b)=> a < b ? 1 : -1);
 

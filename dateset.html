@@ -173,7 +173,7 @@ $(async function(){
     const membersJson = await loadMembers();
     const entries     = await loadEntries();
 
-    /* ★ 日付ごとの小計（未記入＝ "-", "", null, undefined） */
+    /* ★ 日付ごとの小計（未記入＝ "-", "", null, undefined, キーなし） */
     let dailySummary = {};
     datesJson.dates.forEach(d=>{
       dailySummary[d] = { sanka:0, fusanka:0, mikinyu:0 };
@@ -183,6 +183,7 @@ $(async function(){
       if(!e.name || e.name.trim()==="") return;
       if(!datesJson.dates.includes(e.date)) return;
 
+      // ★ status が存在しないケースも拾う
       const raw = e.status;
       const s = (raw === null || raw === undefined) ? "" : String(raw).trim();
 
@@ -236,10 +237,13 @@ $(async function(){
         if(!e){
           html += "<td>-</td>";
         }else{
+          const raw = e.status;
+          const s = (raw === null || raw === undefined) ? "-" : raw;
+
           if(e.note){
-            html += `<td class="note" data-note="${e.note}">${e.status}</td>`;
+            html += `<td class="note" data-note="${e.note}">${s}</td>`;
           }else{
-            html += `<td>${e.status}</td>`;
+            html += `<td>${s}</td>`;
           }
         }
       });

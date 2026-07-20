@@ -43,15 +43,22 @@ $(async function(){
     return await (await fetch(`${RAW}/${path}`)).json();
   }
 
-  /* 最新 members を data 直下から選ぶ */
+  // 最新 members を Worker から取得
   async function loadMembers(){
-    const files = await fetchRaw("data/entry/files.json");
+    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        project:"twitter",
+        type:"list-data"
+      })
+    });
 
-    const memberFiles = files.entries.filter(f =>
-      /^members-\d{4}-\d{2}-\d{2}-v\d+\.json$/i.test(f)
+    const json = await res.json();
+
+    const memberFiles = json.files.filter(name =>
+      /^members-\d{4}-\d{2}-\d{2}-v\d+\.json$/i.test(name)
     );
-
-    if(memberFiles.length === 0) return { members: [] };
 
     memberFiles.sort((a,b)=> a < b ? 1 : -1);
 
@@ -70,100 +77,4 @@ $(async function(){
 
     list.entries.forEach(name=>{
       const m = name.match(/^entry-(\d{4}-\d{2}-\d{2})_v(\d+)\.json$/);
-      if(!m) return;
-
-      const date = m[1];
-      const version = parseInt(m[2],10);
-
-      if(!grouped[date] || grouped[date].version < version){
-        grouped[date] = { name, version };
-      }
-    });
-
-    const all = [];
-
-    for(const date in grouped){
-      const j = await fetchRaw(`data/entry/${grouped[date].name}`);
-
-      if(Array.isArray(j.entries)){
-        j.entries.forEach(e=>{
-          all.push({
-            name: e.name,
-            status: e.status,
-            note: e.note,
-            timestamp: e.timestamp,
-            date: date
-          });
-        });
-      }
-    }
-
-    return all;
-  }
-
-  $("#addDateBtn").on("click", async ()=>{
-    const d = $("#dateInput").val();
-    if(!d){
-      $("#status").text("日付を選択してください").show();
-      return;
-    }
-
-    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        project:"twitter",
-        type:"dates",
-        date:d
-      })
-    });
-
-    $("#status").text(await res.text()).show();
-    renderTable();
-  });
-
-  async function renderTable(){
-
-    const datesJson = await loadDates();
-    const membersJson = await loadMembers();
-    const entries = await loadEntries();
-
-    let html = "<table><tr><th>メンバー</th>";
-
-    datesJson.dates.forEach(d=>{
-      html += `<th>${d}</th>`;
-    });
-    html += "</tr>";
-
-    membersJson.members.forEach(m=>{
-      html += `<tr><td>${m.name}</td>`;
-
-      datesJson.dates.forEach(d=>{
-        const e = entries.find(x => x.name===m.name && x.date===d);
-
-        if(!e){
-          html += "<td>-</td>";
-        }else{
-          if(e.note){
-            html += `<td class="note" title="${e.note}">${e.status}</td>`;
-          }else{
-            html += `<td>${e.status}</td>`;
-          }
-        }
-      });
-
-      html += "</tr>";
-    });
-
-    html += "</table>";
-
-    $("#tableArea").html(html);
-  }
-
-  renderTable();
-
-});
-</script>
-
-</body>
-</html>
+      if(!

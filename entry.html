@@ -47,7 +47,9 @@ button{
 <script>
 $(async function(){
 
-  // 参加者読み込み（raw：壊れない）
+  /* -----------------------------
+     参加者読み込み（raw：壊れない）
+     ----------------------------- */
   const resMembers = await fetch(
     "https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/members.json"
   );
@@ -57,7 +59,9 @@ $(async function(){
     memberJson.members.map(m => `<option value="${m.name}">${m.name}（${m.job}）</option>`)
   );
 
-  // 日付読み込み（raw：壊れない）
+  /* -----------------------------
+     日付読み込み（raw：壊れない）
+     ----------------------------- */
   const resDates = await fetch(
     "https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main/data/dates.json"
   );
@@ -67,10 +71,9 @@ $(async function(){
     $("#dateSelect").append(`<option value="${d}">${d}</option>`);
   });
 
-  // ★ utf8() は削除（壊れる原因）
-  // function utf8(str){ ... } ← 完全削除
-
-  // 送信処理（UTF-8 完全対応）
+  /* -----------------------------
+     送信処理（v001 新仕様）
+     ----------------------------- */
   $("#sendBtn").on("click", async ()=>{
 
     const name = $("#memberSelect").val();
@@ -80,7 +83,7 @@ $(async function(){
 
     const payload = {
       project: "twitter",
-      type: "entry_v001",   // ← 新仕様
+      type: "entry_v001",   // ← Worker の新仕様と一致
       name,
       date,
       status,

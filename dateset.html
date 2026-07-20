@@ -8,12 +8,28 @@
 <style>
 body{background:#1e1e1e;color:#fff;font-family:"Segoe UI";padding:20px}
 h2{margin-bottom:20px}
+
 table{border-collapse:collapse;margin-top:20px;width:100%}
+
+/* 列幅調整 */
 th,td{
-  border:1px solid #555;padding:6px 10px;text-align:center;
-  min-width:120px;
+  border:1px solid #555;
+  padding:6px 10px;
+  text-align:center;
+  min-width:140px;
 }
-td.note{background:#663300;color:#fff;cursor:pointer}
+
+/* ヘッダだけ背景色変更 */
+thead th{
+  background:#2a2a2a;
+  color:#fff;
+}
+
+td.note{
+  background:#663300;
+  color:#fff;
+  cursor:pointer;
+}
 
 /* 備考ポップアップ */
 .note-popup {
@@ -157,7 +173,7 @@ $(async function(){
     const membersJson = await loadMembers();
     const entries     = await loadEntries();
 
-    /* ★ 日付ごとの小計 */
+    /* ★ 日付ごとの小計（未記入＝"-"） */
     let dailySummary = {};
     datesJson.dates.forEach(d=>{
       dailySummary[d] = { sanka:0, fusanka:0, mikinyu:0 };
@@ -168,13 +184,18 @@ $(async function(){
       if(!datesJson.dates.includes(e.date)) return;
 
       const s = e.status || "";
-      if(s==="参加") dailySummary[e.date].sanka++;
-      else if(s==="不参加") dailySummary[e.date].fusanka++;
-      else dailySummary[e.date].mikinyu++;
+
+      if(s === "参加") {
+        dailySummary[e.date].sanka++;
+      } else if(s === "不参加") {
+        dailySummary[e.date].fusanka++;
+      } else if(s === "-") {
+        dailySummary[e.date].mikinyu++;
+      }
     });
 
-    /* ★ テーブル生成（ヘッダに小計を入れる） */
-    let html = "<table>";
+    /* ★ テーブル生成（ヘッダに小計） */
+    let html = "<table><thead>";
 
     html += "<tr><th>参加計</th>";
     datesJson.dates.forEach(d=>{
@@ -200,6 +221,9 @@ $(async function(){
     });
     html += "</tr>";
 
+    html += "</thead><tbody>";
+
+    /* ★ メンバー行 */
     membersJson.members.forEach(m=>{
       if(!m.name || m.name.trim()==="") return;
 
@@ -222,10 +246,11 @@ $(async function(){
       html += "</tr>";
     });
 
-    html += "</table>";
+    html += "</tbody></table>";
 
     $("#tableArea").html(html);
 
+    /* ★ 備考ポップアップ */
     $("#tableArea .note").on("click", function(){
       const note = $(this).data("note");
       if(note) showNotePopup(note);

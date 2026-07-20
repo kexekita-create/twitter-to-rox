@@ -1,9 +1,10 @@
 {
-  "project": "twitter",
-  "type": "entry",
-  "name": "Neko",
-  "date": "2026-08-08",
-  "status": "可",
-  "note": "",
-  "timestamp": "2026-07-20T05:05:26.687Z"
+  "entries": [
+    {
+      "name": "まーがりん",
+      "status": "可",
+      "note": "",
+      "timestamp": "2026-07-20T05:09:12.363Z"
+    }
+  ]
 }

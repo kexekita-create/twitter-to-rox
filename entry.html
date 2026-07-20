@@ -2,28 +2,27 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>参加連絡フォーム</title>
+<title>参加登録</title>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <style>
 body{background:#1e1e1e;color:#fff;font-family:"Segoe UI";padding:20px}
 h2{margin-bottom:20px}
-label{display:block;margin-top:15px;font-size:16px}
+label{display:block;margin-top:10px}
 select,input,textarea{
-  width:300px;padding:8px;border-radius:6px;border:1px solid #666;
-  background:#2a2a2a;color:#fff;font-size:15px;
+  width:300px;padding:8px;margin-top:5px;border-radius:6px;border:none;
 }
 button{
-  margin-top:20px;padding:10px 20px;border:none;border-radius:6px;
-  background:#0078ff;color:#fff;font-size:16px;cursor:pointer;
+  margin-top:15px;padding:10px 20px;border:none;border-radius:6px;
+  background:#0078ff;color:#fff;font-size:15px;cursor:pointer;
 }
-#status{margin-top:20px;background:#333;padding:10px;border-radius:6px;display:none}
+#status{margin-top:10px;background:#333;padding:10px;border-radius:6px;display:none}
 </style>
 </head>
 
 <body>
 
-<h2>参加連絡フォーム</h2>
+<h2>参加登録</h2>
 
 <label>参加者</label>
 <select id="memberSelect"></select>
@@ -31,10 +30,11 @@ button{
 <label>日付</label>
 <select id="dateSelect"></select>
 
-<label>参加可否</label>
+<label>ステータス</label>
 <select id="statusSelect">
-  <option value="可">可</option>
-  <option value="否">否</option>
+  <option value="参加">参加</option>
+  <option value="不参加">不参加</option>
+  <option value="未定">未定</option>
 </select>
 
 <label>備考</label>
@@ -47,56 +47,70 @@ button{
 <script>
 $(async function(){
 
+  const RAW = "https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main";
+  const API = "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents";
+
   /* -----------------------------
-     最新 members を GitHub API で読み込む（高速）
+     raw → JSON（絶対壊れない）
+     ----------------------------- */
+  async function fetchRaw(path){
+    return await (await fetch(`${RAW}/${path}`)).json();
+  }
+
+  /* -----------------------------
+     members（APIで一覧 → rawで中身）
      ----------------------------- */
   async function loadMembers(){
-    const apiUrl =
-      "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data";
-
-    const files = await (await fetch(apiUrl)).json();
-
+    const files = await (await fetch(`${API}/data`)).json();
     const memberFiles = files.filter(f => /^members-.*\.json$/i.test(f.name));
-
     memberFiles.sort((a,b)=> a.name < b.name ? 1 : -1);
-
-    const latest = memberFiles[0];
-
-    const info = await (await fetch(
-      `https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data/${latest.name}`
-    )).json();
-
-    return await (await fetch(info.download_url)).json();
+    return await fetchRaw(`data/${memberFiles[0].name}`);
   }
 
   /* -----------------------------
-     参加者読み込み
-     ----------------------------- */
-  const memberJson = await loadMembers();
-
-  $("#memberSelect").append(
-    memberJson.members.map(m => `<option value="${m.name}">${m.name}（${m.job}）</option>`)
-  );
-
-  /* -----------------------------
-     日付読み込み（GitHub API）
+     dates（raw）
      ----------------------------- */
   async function loadDates(){
-    const info = await (await fetch(
-      "https://api.github.com/repos/kexekita-create/twitter-to-rox/contents/data/dates.json"
-    )).json();
-
-    return await (await fetch(info.download_url)).json();
+    return await fetchRaw("data/dates.json");
   }
 
-  const datesJson = await loadDates();
+  /* -----------------------------
+     entry 最新 version 読み込み（API → raw）
+     ----------------------------- */
+  async function loadLatestEntry(date){
 
-  datesJson.dates.forEach(d=>{
-    $("#dateSelect").append(`<option value="${d}">${d}</option>`);
-  });
+    const files = await (await fetch(`${API}/data/entry`)).json();
+
+    const entryFiles = files.filter(f => f.name.startsWith(`entry-${date}_v`));
+
+    if(entryFiles.length === 0) return null;
+
+    entryFiles.sort((a,b)=> a.name < b.name ? 1 : -1);
+
+    const latest = entryFiles[0].name;
+
+    return await fetchRaw(`data/entry/${latest}`);
+  }
 
   /* -----------------------------
-     送信処理（Worker に entry を送る）
+     初期化：メンバーと日付を読み込む
+     ----------------------------- */
+  async function init(){
+
+    const membersJson = await loadMembers();
+    const datesJson = await loadDates();
+
+    membersJson.members.forEach(m=>{
+      $("#memberSelect").append(`<option value="${m.name}">${m.name}</option>`);
+    });
+
+    datesJson.dates.forEach(d=>{
+      $("#dateSelect").append(`<option value="${d}">${d}</option>`);
+    });
+  }
+
+  /* -----------------------------
+     送信（Worker）
      ----------------------------- */
   $("#sendBtn").on("click", async ()=>{
 
@@ -105,25 +119,23 @@ $(async function(){
     const status = $("#statusSelect").val();
     const note = $("#noteInput").val();
 
-    const payload = {
-      project: "twitter",
-      type: "entry",
-      name,
-      date,
-      status,
-      note,
-      timestamp: new Date().toISOString()
-    };
-
     const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload)
+      body:JSON.stringify({
+        project:"twitter",
+        type:"entry",
+        name:name,
+        date:date,
+        status:status,
+        note:note
+      })
     });
 
-    const text = await res.text();
-    $("#status").text(text).show();
+    $("#status").text(await res.text()).show();
   });
+
+  init();
 
 });
 </script>

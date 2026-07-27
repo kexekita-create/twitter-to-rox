@@ -129,23 +129,21 @@ $(function () {
     setTimeout(() => $("#status").fadeOut(300), 3000);
   }
 
+  /* ★★★ Unknown type を完全に消す修正版 ★★★ */
   function collectMembersData() {
-    const data = {
-      type: "members",
+    return {
+      project: "twitter",   // ← 必須
+      type: "members",      // ← 必須
       date: $("#eventDate").val(),
-      members: []
+      members: $("#memberTable tbody tr").map(function () {
+        return {
+          no: $(this).find("td:eq(0)").text(),
+          name: $(this).find("input").val(),
+          job: $(this).find("select[name^='job']").val(),
+          join: $(this).find("select[name^='join']").val()
+        };
+      }).get()
     };
-
-    $("#memberTable tbody tr").each(function () {
-      data.members.push({
-        no: $(this).find("td:eq(0)").text(),
-        name: $(this).find("input").val(),
-        job: $(this).find("select[name^='job']").val(),
-        join: $(this).find("select[name^='join']").val()
-      });
-    });
-
-    return data;
   }
 
   function downloadLocal(filename, json) {
@@ -215,16 +213,9 @@ $(function () {
     showStatus("サーバーから読み込みました");
   });
 
-  /* ★★★ 修正版：サーバー保存（unknown type を完全解消） ★★★ */
+  /* ★★★ Unknown type 完全解消版 保存処理 ★★★ */
   $("#serverSaveBtn").on("click", async function () {
-    const data = collectMembersData();
-
-    const payload = {
-      project: "twitter",
-      type: "members",
-      date: data.date,
-      members: data.members
-    };
+    const payload = collectMembersData();
 
     try {
       const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {

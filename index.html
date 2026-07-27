@@ -215,16 +215,23 @@ $(function () {
     showStatus("サーバーから読み込みました");
   });
 
+  /* ★★★ 修正版：サーバー保存（unknown type を完全解消） ★★★ */
   $("#serverSaveBtn").on("click", async function () {
     const data = collectMembersData();
 
+    const payload = {
+      project: "twitter",
+      type: "members",
+      date: data.date,
+      members: data.members
+    };
+
     try {
-    data.project = "twitter"
-    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
+      const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-    });
+        body: JSON.stringify(payload)
+      });
 
       showStatus(await res.text());
       loadFileList();

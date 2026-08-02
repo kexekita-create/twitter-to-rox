@@ -144,6 +144,16 @@ $(async function(){
     return all;
   }
 
+  async function loadCounts(){
+    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ project:"twitter", type:"count-load" })
+    });
+    const json = await res.json();
+    return json.counts || [];
+  }
+
   $("#addDateBtn").on("click", async ()=>{
     const d = $("#dateInput").val();
     if(!d){
@@ -170,6 +180,10 @@ $(async function(){
     const datesJson   = await loadDates();
     const membersJson = await loadMembers();
     const entries     = await loadEntries();
+    const counts      = await loadCounts();
+
+    let countMap = {};
+    counts.forEach(c => countMap[c.name] = c.count);
 
     let dailySummary = {};
     datesJson.dates.forEach(d=>{
@@ -203,8 +217,10 @@ $(async function(){
     membersJson.members.forEach(m=>{
       if(!m.name || m.name.trim()==="") return;
 
+      const initCount = countMap[m.name] || 0;
+
       html += `<tr>
-        <td><input type="number" class="count-input" data-name="${m.name}" value="0" style="width:60px"></td>
+        <td><input type="number" class="count-input" data-name="${m.name}" value="${initCount}" style="width:60px"></td>
         <td>${m.name}</td>
       `;
 

@@ -10,28 +10,22 @@ body{background:#1e1e1e;color:#fff;font-family:"Segoe UI";padding:20px}
 h2{margin-bottom:20px}
 
 table{border-collapse:collapse;margin-top:20px;width:100%}
-
-/* 列幅調整 */
 th,td{
   border:1px solid #555;
   padding:6px 10px;
   text-align:center;
   min-width:140px;
 }
-
-/* ヘッダだけ背景色変更 */
 thead th{
   background:#2a2a2a;
   color:#fff;
 }
-
 td.note{
   background:#663300;
   color:#fff;
   cursor:pointer;
 }
 
-/* 備考ポップアップ */
 .note-popup {
   position: fixed;
   left: 50%;
@@ -65,6 +59,10 @@ td.note{
 <label>日付追加（カレンダー）</label>
 <input type="date" id="dateInput">
 <button id="addDateBtn">追加</button>
+
+<br><br>
+
+<button id="saveCountBtn">参加回数を保存</button>
 
 <div id="status"></div>
 <div id="tableArea"></div>
@@ -173,17 +171,15 @@ $(async function(){
     const membersJson = await loadMembers();
     const entries     = await loadEntries();
 
-    /* ★ 日付ごとの小計（未記入＝ "-", "", null, undefined, キーなし） */
     let dailySummary = {};
     datesJson.dates.forEach(d=>{
-      dailySummary[d] = { sanka:0, fusanka:0, mikinyu:0 };
+      dailySummary[d] = { sanka:0, fusanka:0 };
     });
 
     entries.forEach(e=>{
       if(!e.name || e.name.trim()==="") return;
       if(!datesJson.dates.includes(e.date)) return;
 
-      // ★ status が存在しないケースも拾う
       const raw = e.status;
       const s = (raw === null || raw === undefined) ? "" : String(raw).trim();
 
@@ -191,33 +187,12 @@ $(async function(){
         dailySummary[e.date].sanka++;
       } else if(s === "不参加") {
         dailySummary[e.date].fusanka++;
-      } else if(s === "-" || s === "") {
-        dailySummary[e.date].mikinyu++;
       }
     });
 
-    /* ★ テーブル生成（ヘッダに小計） */
     let html = "<table><thead>";
 
-    html += "<tr><th>参加計</th>";
-    datesJson.dates.forEach(d=>{
-      html += `<th>${dailySummary[d].sanka}人</th>`;
-    });
-    html += "</tr>";
-
-    html += "<tr><th>不参加計</th>";
-    datesJson.dates.forEach(d=>{
-      html += `<th>${dailySummary[d].fusanka}人</th>`;
-    });
-    html += "</tr>";
-
-    html += "<tr><th>未記入計</th>";
-    datesJson.dates.forEach(d=>{
-      html += `<th>${dailySummary[d].mikinyu}人</th>`;
-    });
-    html += "</tr>";
-
-    html += "<tr><th>メンバー</th>";
+    html += "<tr><th>参加回数</th><th>メンバー</th>";
     datesJson.dates.forEach(d=>{
       html += `<th>${d}</th>`;
     });
@@ -225,11 +200,13 @@ $(async function(){
 
     html += "</thead><tbody>";
 
-    /* ★ メンバー行 */
     membersJson.members.forEach(m=>{
       if(!m.name || m.name.trim()==="") return;
 
-      html += `<tr><td>${m.name}</td>`;
+      html += `<tr>
+        <td><input type="number" class="count-input" data-name="${m.name}" value="0" style="width:60px"></td>
+        <td>${m.name}</td>
+      `;
 
       datesJson.dates.forEach(d=>{
         const e = entries.find(x => x.name===m.name && x.date===d);
@@ -255,12 +232,39 @@ $(async function(){
 
     $("#tableArea").html(html);
 
-    /* ★ 備考ポップアップ */
     $("#tableArea .note").on("click", function(){
       const note = $(this).data("note");
       if(note) showNotePopup(note);
     });
   }
+
+  $("#saveCountBtn").on("click", async ()=>{
+    const counts = [];
+
+    $(".count-input").each(function(){
+      const name = $(this).data("name");
+      const val  = parseInt($(this).val(),10) || 0;
+      counts.push({ name, count: val });
+    });
+
+    try{
+      const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          project:"twitter",
+          type:"count-save",
+          counts: counts
+        })
+      });
+
+      const text = await res.text();
+      $("#status").text(text).show();
+
+    }catch(e){
+      $("#status").text("保存エラー: " + e.message).show();
+    }
+  });
 
   await renderTable();
 

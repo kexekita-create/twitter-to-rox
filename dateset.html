@@ -185,6 +185,13 @@ $(async function(){
     let countMap = {};
     counts.forEach(c => countMap[c.name] = c.count);
 
+    // ★★★ 参加回数の多い順にソート ★★★
+    membersJson.members.sort((a, b) => {
+      const ca = countMap[a.name] || 0;
+      const cb = countMap[b.name] || 0;
+      return cb - ca; // 降順
+    });
+
     let dailySummary = {};
     datesJson.dates.forEach(d=>{
       dailySummary[d] = { sanka:0, fusanka:0 };

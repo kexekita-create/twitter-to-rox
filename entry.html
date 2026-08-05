@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>参加登録</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+body{background:#1e1e1e;color:#fff;font-family:"Segoe UI";padding:20px}
+h2{margin-bottom:20px}
+label{display:block;margin-top:10px}
+select,input,textarea{
+  width:300px;padding:8px;margin-top:5px;border-radius:6px;border:none;
+}
+button{
+  margin-top:15px;padding:10px 20px;border:none;border-radius:6px;
+  background:#0078ff;color:#fff;font-size:15px;cursor:pointer;
+}
+#status{margin-top:10px;background:#333;padding:10px;border-radius:6px;display:none}
+</style>
+</head>
+
+<body>
+
+<h2>参加登録</h2>
+
+<label>参加者</label>
+<select id="memberSelect"></select>
+
+<label>日付</label>
+<select id="dateSelect"></select>
+
+<label>ステータス</label>
+<select id="statusSelect">
+  <option value="参加">参加</option>
+  <option value="不参加">不参加</option>
+</select>
+
+<label>備考</label>
+<textarea id="noteInput" rows="4"></textarea>
+
+<button id="sendBtn">送信</button>
+
+<div id="status"></div>
+
+<script>
+$(async function(){
+
+  const RAW = "https://raw.githubusercontent.com/kexekita-create/twitter-to-rox/main";
+
+  async function fetchRaw(path){
+    return await (await fetch(`${RAW}/${path}`)).json();
+  }
+
+  // 最新 members を Worker から取得
+  async function loadMembers(){
+    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        project:"twitter",
+        type:"list-data"
+      })
+    });
+
+    const json = await res.json();
+
+    const memberFiles = json.files.filter(name =>
+      /^members-\d{4}-\d{2}-\d{2}-v\d+\.json$/i.test(name)
+    );
+
+    memberFiles.sort((a,b)=> a < b ? 1 : -1);
+
+    return await fetchRaw(`data/${memberFiles[0]}`);
+  }
+
+  async function loadDates(){
+    return await fetchRaw("data/dates.json");
+  }
+
+  async function init(){
+
+    const membersJson = await loadMembers();
+    const datesJson = await loadDates();
+
+    membersJson.members.forEach(m=>{
+      $("#memberSelect").append(`<option value="${m.name}">${m.name}</option>`);
+    });
+
+    datesJson.dates.forEach(d=>{
+      $("#dateSelect").append(`<option value="${d}">${d}</option>`);
+    });
+  }
+
+  $("#sendBtn").on("click", async ()=>{
+
+    const name = $("#memberSelect").val();
+    const date = $("#dateSelect").val();
+    const status = $("#statusSelect").val();
+    const note = $("#noteInput").val();
+
+    const res = await fetch("https://patient-violet-af9d.k-exe-kita.workers.dev",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        project:"twitter",
+        type:"entry",
+        name:name,
+        date:date,
+        status:status,
+        note:note
+      })
+    });
+
+    $("#status").text(await res.text()).show();
+  });
+
+  init();
+
+});
+</script>
+
+</body>
+</html>

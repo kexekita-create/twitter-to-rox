@@ -1,0 +1,383 @@
+{
+  "project": "twitter",
+  "type": "count-save",
+  "date": "2026-08-07",
+  "counts": [
+    {
+      "name": "まーがりん",
+      "count": 3
+    },
+    {
+      "name": "リュウ",
+      "count": 3
+    },
+    {
+      "name": "Leco",
+      "count": 3
+    },
+    {
+      "name": "Luxst",
+      "count": 3
+    },
+    {
+      "name": "ミキ",
+      "count": 3
+    },
+    {
+      "name": "ちゃら",
+      "count": 3
+    },
+    {
+      "name": "とぴお",
+      "count": 3
+    },
+    {
+      "name": "MercuriuS",
+      "count": 3
+    },
+    {
+      "name": "MNB",
+      "count": 3
+    },
+    {
+      "name": "YUKI",
+      "count": 3
+    },
+    {
+      "name": "しょーん",
+      "count": 3
+    },
+    {
+      "name": "ガロード",
+      "count": 3
+    },
+    {
+      "name": "ありす",
+      "count": 3
+    },
+    {
+      "name": "しるふぃ",
+      "count": 3
+    },
+    {
+      "name": "厨二",
+      "count": 3
+    },
+    {
+      "name": "ありんす",
+      "count": 3
+    },
+    {
+      "name": "mirumiru",
+      "count": 3
+    },
+    {
+      "name": "にゃんぽ",
+      "count": 3
+    },
+    {
+      "name": "あび",
+      "count": 3
+    },
+    {
+      "name": "れいヴん",
+      "count": 3
+    },
+    {
+      "name": "翠藍",
+      "count": 3
+    },
+    {
+      "name": "はまたろす",
+      "count": 3
+    },
+    {
+      "name": "yuki8451",
+      "count": 3
+    },
+    {
+      "name": "まゆちゃん",
+      "count": 3
+    },
+    {
+      "name": "SRAI",
+      "count": 3
+    },
+    {
+      "name": "両義",
+      "count": 3
+    },
+    {
+      "name": "ゆり",
+      "count": 3
+    },
+    {
+      "name": "わさびちゃん",
+      "count": 3
+    },
+    {
+      "name": "ルカ",
+      "count": 3
+    },
+    {
+      "name": "鶏肉",
+      "count": 3
+    },
+    {
+      "name": "イロリ",
+      "count": 3
+    },
+    {
+      "name": "ジウォン",
+      "count": 3
+    },
+    {
+      "name": "猫背のポワレ",
+      "count": 3
+    },
+    {
+      "name": "豚",
+      "count": 3
+    },
+    {
+      "name": "リツ",
+      "count": 3
+    },
+    {
+      "name": "Ryo",
+      "count": 3
+    },
+    {
+      "name": "ちぁい",
+      "count": 1
+    },
+    {
+      "name": "てぃーきち",
+      "count": 3
+    },
+    {
+      "name": "焼きプリン",
+      "count": 3
+    },
+    {
+      "name": "ばびさん",
+      "count": 3
+    },
+    {
+      "name": "みみたや",
+      "count": 3
+    },
+    {
+      "name": "ぴとー",
+      "count": 3
+    },
+    {
+      "name": "かのたや",
+      "count": 3
+    },
+    {
+      "name": "ゆせ",
+      "count": 3
+    },
+    {
+      "name": "Neko",
+      "count": 3
+    },
+    {
+      "name": "S.レイニー",
+      "count": 3
+    },
+    {
+      "name": "鬼野馬",
+      "count": 3
+    },
+    {
+      "name": "鬼羅夢",
+      "count": 3
+    },
+    {
+      "name": "あいくん",
+      "count": 3
+    },
+    {
+      "name": "なおと",
+      "count": 2
+    },
+    {
+      "name": "ダーシェンカ",
+      "count": 2
+    },
+    {
+      "name": "カビゴン",
+      "count": 2
+    },
+    {
+      "name": "りゅうちゃびん",
+      "count": 2
+    },
+    {
+      "name": "あお",
+      "count": 2
+    },
+    {
+      "name": "アプリシュカ",
+      "count": 2
+    },
+    {
+      "name": "ティグリス",
+      "count": 2
+    },
+    {
+      "name": "ライゼン",
+      "count": 2
+    },
+    {
+      "name": "フッキー",
+      "count": 2
+    },
+    {
+      "name": "Celt",
+      "count": 2
+    },
+    {
+      "name": "チックタック",
+      "count": 2
+    },
+    {
+      "name": "あつ",
+      "count": 2
+    },
+    {
+      "name": "ぽんころん",
+      "count": 1
+    },
+    {
+      "name": "ちぇず",
+      "count": 1
+    },
+    {
+      "name": "こここいこい",
+      "count": 1
+    },
+    {
+      "name": "ルディ",
+      "count": 1
+    },
+    {
+      "name": "ソシエ",
+      "count": 1
+    },
+    {
+      "name": "海原聖香",
+      "count": 1
+    },
+    {
+      "name": "ぺりー",
+      "count": 1
+    },
+    {
+      "name": "エイチャ",
+      "count": 1
+    },
+    {
+      "name": "ややいえ",
+      "count": 1
+    },
+    {
+      "name": "国庫",
+      "count": 1
+    },
+    {
+      "name": "ミストガン",
+      "count": 1
+    },
+    {
+      "name": "ガネット",
+      "count": 0
+    },
+    {
+      "name": "ぴゅ",
+      "count": 0
+    },
+    {
+      "name": "るいもっち",
+      "count": 0
+    },
+    {
+      "name": "とも",
+      "count": 2
+    },
+    {
+      "name": "やみ",
+      "count": 0
+    },
+    {
+      "name": "レイスンスン",
+      "count": 0
+    },
+    {
+      "name": "詩音",
+      "count": 0
+    },
+    {
+      "name": "川に流れる葉",
+      "count": 0
+    },
+    {
+      "name": "すみちゃん",
+      "count": 0
+    },
+    {
+      "name": "桜花いろは",
+      "count": 0
+    },
+    {
+      "name": "マリンスフィア",
+      "count": 0
+    },
+    {
+      "name": "SYU",
+      "count": 0
+    },
+    {
+      "name": "バニスマ",
+      "count": 0
+    },
+    {
+      "name": "神無月",
+      "count": 0
+    },
+    {
+      "name": "るぅ",
+      "count": 0
+    },
+    {
+      "name": "arlu",
+      "count": 0
+    },
+    {
+      "name": "もえ",
+      "count": 0
+    },
+    {
+      "name": "ししる",
+      "count": 0
+    },
+    {
+      "name": "すいーぷ",
+      "count": 0
+    },
+    {
+      "name": "よもち",
+      "count": 0
+    },
+    {
+      "name": "ミューズ",
+      "count": 0
+    },
+    {
+      "name": "バーキンワッパー",
+      "count": 0
+    }
+  ]
+}

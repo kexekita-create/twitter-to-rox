@@ -1,0 +1,379 @@
+{
+  "project": "twitter",
+  "type": "count-save",
+  "date": "2026-08-18",
+  "counts": [
+    {
+      "name": "まーがりん",
+      "count": 7
+    },
+    {
+      "name": "リュウ",
+      "count": 7
+    },
+    {
+      "name": "Leco",
+      "count": 7
+    },
+    {
+      "name": "Luxst",
+      "count": 7
+    },
+    {
+      "name": "ミキ",
+      "count": 7
+    },
+    {
+      "name": "ちゃら",
+      "count": 7
+    },
+    {
+      "name": "とぴお",
+      "count": 7
+    },
+    {
+      "name": "MercuriuS",
+      "count": 7
+    },
+    {
+      "name": "MNB",
+      "count": 7
+    },
+    {
+      "name": "YUKI",
+      "count": 7
+    },
+    {
+      "name": "しょーん",
+      "count": 7
+    },
+    {
+      "name": "ありす",
+      "count": 7
+    },
+    {
+      "name": "しるふぃ",
+      "count": 7
+    },
+    {
+      "name": "厨二",
+      "count": 7
+    },
+    {
+      "name": "ありんす",
+      "count": 7
+    },
+    {
+      "name": "mirumiru",
+      "count": 7
+    },
+    {
+      "name": "にゃんぽ",
+      "count": 7
+    },
+    {
+      "name": "あび",
+      "count": 7
+    },
+    {
+      "name": "れいヴん",
+      "count": 7
+    },
+    {
+      "name": "翠藍",
+      "count": 7
+    },
+    {
+      "name": "はまたろす",
+      "count": 7
+    },
+    {
+      "name": "yuki8451",
+      "count": 7
+    },
+    {
+      "name": "まゆちゃん",
+      "count": 6
+    },
+    {
+      "name": "SRAI",
+      "count": 7
+    },
+    {
+      "name": "両義",
+      "count": 7
+    },
+    {
+      "name": "ゆり",
+      "count": 7
+    },
+    {
+      "name": "わさびちゃん",
+      "count": 7
+    },
+    {
+      "name": "ルカ",
+      "count": 7
+    },
+    {
+      "name": "鶏肉",
+      "count": 7
+    },
+    {
+      "name": "イロリ",
+      "count": 7
+    },
+    {
+      "name": "ジウォン",
+      "count": 7
+    },
+    {
+      "name": "猫背のポワレ",
+      "count": 7
+    },
+    {
+      "name": "豚",
+      "count": 7
+    },
+    {
+      "name": "リツ",
+      "count": 7
+    },
+    {
+      "name": "Ryo",
+      "count": 7
+    },
+    {
+      "name": "てぃーきち",
+      "count": 7
+    },
+    {
+      "name": "焼きプリン",
+      "count": 7
+    },
+    {
+      "name": "ばびさん",
+      "count": 7
+    },
+    {
+      "name": "みみたや",
+      "count": 7
+    },
+    {
+      "name": "かのたや",
+      "count": 7
+    },
+    {
+      "name": "Neko",
+      "count": 7
+    },
+    {
+      "name": "S.レイニー",
+      "count": 7
+    },
+    {
+      "name": "鬼野馬",
+      "count": 7
+    },
+    {
+      "name": "鬼羅夢",
+      "count": 7
+    },
+    {
+      "name": "あいくん",
+      "count": 7
+    },
+    {
+      "name": "なおと",
+      "count": 5
+    },
+    {
+      "name": "ガロード",
+      "count": 6
+    },
+    {
+      "name": "カビゴン",
+      "count": 5
+    },
+    {
+      "name": "りゅうちゃびん",
+      "count": 6
+    },
+    {
+      "name": "あお",
+      "count": 5
+    },
+    {
+      "name": "アプリシュカ",
+      "count": 5
+    },
+    {
+      "name": "ライゼン",
+      "count": 5
+    },
+    {
+      "name": "ぴとー",
+      "count": 6
+    },
+    {
+      "name": "ゆせ",
+      "count": 5
+    },
+    {
+      "name": "エイチャ",
+      "count": 4
+    },
+    {
+      "name": "あつ",
+      "count": 5
+    },
+    {
+      "name": "ガネット",
+      "count": 4
+    },
+    {
+      "name": "ぽんころん",
+      "count": 4
+    },
+    {
+      "name": "とも",
+      "count": 3
+    },
+    {
+      "name": "ルディ",
+      "count": 3
+    },
+    {
+      "name": "ダーシェンカ",
+      "count": 2
+    },
+    {
+      "name": "ぺりー",
+      "count": 2
+    },
+    {
+      "name": "ティグリス",
+      "count": 2
+    },
+    {
+      "name": "フッキー",
+      "count": 2
+    },
+    {
+      "name": "Celt",
+      "count": 2
+    },
+    {
+      "name": "ちぇず",
+      "count": 1
+    },
+    {
+      "name": "やみ",
+      "count": 1
+    },
+    {
+      "name": "こここいこい",
+      "count": 1
+    },
+    {
+      "name": "ソシエ",
+      "count": 2
+    },
+    {
+      "name": "海原聖香",
+      "count": 1
+    },
+    {
+      "name": "ややいえ",
+      "count": 1
+    },
+    {
+      "name": "国庫",
+      "count": 1
+    },
+    {
+      "name": "桜花いろは",
+      "count": 1
+    },
+    {
+      "name": "マリンスフィア",
+      "count": 1
+    },
+    {
+      "name": "神無月",
+      "count": 2
+    },
+    {
+      "name": "arlu",
+      "count": 2
+    },
+    {
+      "name": "ミストガン",
+      "count": 2
+    },
+    {
+      "name": "すいーぷ",
+      "count": 1
+    },
+    {
+      "name": "ぴゅ",
+      "count": 1
+    },
+    {
+      "name": "るいもっち",
+      "count": 0
+    },
+    {
+      "name": "レイスンスン",
+      "count": 1
+    },
+    {
+      "name": "詩音",
+      "count": 1
+    },
+    {
+      "name": "川に流れる葉",
+      "count": 0
+    },
+    {
+      "name": "すみちゃん",
+      "count": 0
+    },
+    {
+      "name": "SYU",
+      "count": 0
+    },
+    {
+      "name": "バニスマ",
+      "count": 0
+    },
+    {
+      "name": "チックタック",
+      "count": 0
+    },
+    {
+      "name": "るぅ",
+      "count": 0
+    },
+    {
+      "name": "もえ",
+      "count": 0
+    },
+    {
+      "name": "ししる",
+      "count": 0
+    },
+    {
+      "name": "よもち",
+      "count": 0
+    },
+    {
+      "name": "ミューズ",
+      "count": 0
+    },
+    {
+      "name": "バーキンワッパー",
+      "count": 0
+    }
+  ]
+}

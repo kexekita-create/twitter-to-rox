@@ -468,117 +468,269 @@ function loadShortURLData() {
 </script>
 <script>
 
+<script>
+
 /* ============================================
-   PART 6: 計算式（画像の仕様に完全準拠）
+   PART 6: まがりんの元ソース（完全コピー）
 ============================================ */
 
 function calculateDamage() {
+    const getNumber = id => parseFloat(document.getElementById(id).value) || 0;
+    
+    const physicalAttack = getNumber('physicalAttack');
+    const finalPhysicalPenetration = getNumber('finalPhysicalPenetration');
+    const criticalDamage = getNumber('criticalDamage');
+    const physicalDamageBonus = getNumber('physicalDamageBonus');
+    const finalPhysicalDamageBonus = getNumber('finalPhysicalDamageBonus');
+    const raceBonus = getNumber('raceBonus');
+    const elementBonus = getNumber('elementBonus');
+    const sizeEnhance = getNumber('sizeEnhance');
+    const finalDamageBonus = getNumber('finalDamageBonus');
+    const skillDamageBonus = getNumber('skillDamageBonus');
+    const elementEnhance = getNumber('elementEnhance');
+    const elementCounter = getNumber('elementCounter');
+    const sizeModifier = getNumber('sizeModifier');
 
-    const A = id => Number(document.getElementById(id).value) || 0;
+    const pvpPhysicalDamageBonus = getNumber('pvpPhysicalDamageBonus');
+    const pvpFinalPhysicalDamageBonus = getNumber('pvpFinalPhysicalDamageBonus');
 
-    /* 攻撃側 */
-    const physicalAttack = A("physicalAttack");
-    const finalPhysicalPenetration = A("finalPhysicalPenetration");
-    const criDamage = A("criDamage");
+    const skillMultiplier = getNumber('skillMultiplier');
+    const skillAddition = getNumber('skillAddition');
+    const skillCount = getNumber('skillCount');
 
-    const physicalEnhance = A("physicalEnhance");
-    const finalEnhance = A("finalEnhance");
+    const physicalLifeSteal = getNumber('physicalLifeSteal');
+    const physicalReflect = getNumber('physicalReflect');
 
-    const raceDamageIncrease = A("raceDamageIncrease");
-    const attributeDamageIncrease = A("attributeDamageIncrease");
-    const sizeDamageIncrease = A("sizeDamageIncrease");
-    const finalDamageIncrease = A("finalDamageIncrease");
-    const damageUp = A("damageUp");
+    const finalPhysicalDefense = getNumber('finalPhysicalDefense');
+    const criticalDamageReduction = getNumber('criticalDamageReduction');
+    const physicalDamageReduction = getNumber('physicalDamageReduction');
+    const finalPhysicalDamageReduction = getNumber('finalPhysicalDamageReduction');
+    const finalDamageReduction = getNumber('finalDamageReduction');
 
-    const attributeEnhance = A("attributeEnhance");
-    const attributeAffinity = A("attributeAffinity");
-    const weaponSizeCorrection = A("weaponSizeCorrection");
+    const pvpPhysicalDamageReduction = getNumber('pvpPhysicalDamageReduction');
+    const pvpFinalPhysicalDamageReduction = getNumber('pvpFinalPhysicalDamageReduction');
 
-    const pvpPhysicalEnhance = A("pvpPhysicalEnhance");
-    const pvpFinalPhysicalEnhance = A("pvpFinalPhysicalEnhance");
+    const targetPhysicalAttack = getNumber('targetPhysicalAttack');
+    const targetFinalPhysicalDefense = getNumber('targetFinalPhysicalDefense');
+    const targetCriticalDamageReduction = getNumber('targetCriticalDamageReduction');
+    const targetPhysicalDamageReduction = getNumber('targetPhysicalDamageReduction');
+    const targetFinalPhysicalDamageReduction = getNumber('targetFinalPhysicalDamageReduction');
+    const targetRaceReduction = getNumber('targetRaceReduction');
+    const targetElementReduction = getNumber('targetElementReduction');
+    const targetSizeReduction = getNumber('targetSizeReduction');
+    const targetFinalDamageReduction = getNumber('targetFinalDamageReduction');
+    const targetElementResistance = getNumber('targetElementResistance');
 
-    const skillMultiplier = A("skillMultiplier");
+    const targetPvpPhysicalDamageReduction = getNumber('targetPvpPhysicalDamageReduction');
+    const targetPvpFinalPhysicalDamageReduction = getNumber('targetPvpFinalPhysicalDamageReduction');
 
-    const absorbPercent = A("absorbPercent");
-    const reflectPercent = A("reflectPercent");
+    let calcFinalPhysicalPenetration = finalPhysicalPenetration - targetFinalPhysicalDefense;
+    if (calcFinalPhysicalPenetration < -80) { calcFinalPhysicalPenetration = -80; }
 
-    /* 防御側 */
-    const targetFinalPhysicalDefense = A("targetFinalPhysicalDefense");
-    const criDamageReduce = A("criDamageReduce");
-    const physicalDamageReduce = A("physicalDamageReduce");
-    const finalPhysicalDamageReduce = A("finalPhysicalDamageReduce");
-    const raceDamageReduce = A("raceDamageReduce");
-    const attributeDamageReduce = A("attributeDamageReduce");
-    const sizeDamageReduce = A("sizeDamageReduce");
-    const finalDamageReduce = A("finalDamageReduce");
-    const attributeResistance = A("attributeResistance");
-    const pvpPhysicalDamageReduce = A("pvpPhysicalDamageReduce");
-    const pvpFinalPhysicalDamageReduce = A("pvpFinalPhysicalDamageReduce");
+    let calcCriticalDamage = criticalDamage - targetCriticalDamageReduction;
+    if (calcCriticalDamage < 20) { calcCriticalDamage = 20; }
 
-    /* ① 基礎ダメージ */
-    const base = physicalAttack * (1 + finalPhysicalPenetration / 100);
+    let calcFinalPhysicalDamageBonus = finalPhysicalDamageBonus - targetFinalPhysicalDamageReduction;
+    if (calcFinalPhysicalDamageBonus < -80) { calcFinalPhysicalDamageBonus = -80; }
 
-    /* ② 攻撃側補正（全部乗算） */
-    const atkMulti =
-        (1 + physicalEnhance / 100) *
-        (1 + finalEnhance / 100) *
-        (1 + raceDamageIncrease / 100) *
-        (1 + attributeDamageIncrease / 100) *
-        (1 + sizeDamageIncrease / 100) *
-        (1 + finalDamageIncrease / 100) *
-        (1 + damageUp / 100) *
-        (1 + attributeEnhance / 100) *
-        (attributeAffinity / 100) *
-        (weaponSizeCorrection / 100);
+    let calcRaceBonus = raceBonus - targetRaceReduction;
+    if (calcRaceBonus < -80) { calcRaceBonus = -80; }
 
-    /* ③ 防御側補正（全部減算） */
-    const defMulti =
-        (1 - targetFinalPhysicalDefense / 100) *
-        (1 - physicalDamageReduce / 100) *
-        (1 - finalPhysicalDamageReduce / 100) *
-        (1 - raceDamageReduce / 100) *
-        (1 - attributeDamageReduce / 100) *
-        (1 - sizeDamageReduce / 100) *
-        (1 - finalDamageReduce / 100) *
-        (1 - attributeResistance / 100);
+    let calcElementBonus = elementBonus - targetElementReduction;
+    if (calcElementBonus < -80) { calcElementBonus = -80; }
 
-    /* ④ 通常ダメージ */
-    const normal = base * atkMulti * defMulti;
+    let calcFinalDamageBonus = finalDamageBonus - targetFinalDamageReduction;
+    if (calcFinalDamageBonus < -80) { calcFinalDamageBonus = -80; }
 
-    /* ⑤ クリティカル */
-    const cri = normal * (criDamage / 100) * (1 - criDamageReduce / 100);
+    let calcElementEnhance = elementCounter + elementEnhance - targetElementResistance;
+    if (calcElementEnhance < 20) { calcElementEnhance = 20; }
 
-    /* ⑥ PVP補正 */
-    const pvpNormal =
-        normal *
-        (1 + pvpPhysicalEnhance / 100) *
-        (1 + pvpFinalPhysicalEnhance / 100) *
-        (1 - pvpPhysicalDamageReduce / 100) *
-        (1 - pvpFinalPhysicalDamageReduce / 100);
+    let calcSizeEnhance = sizeModifier + sizeEnhance - targetSizeReduction;
+    if (calcSizeEnhance < 20) { calcSizeEnhance = 20; }
 
-    const pvpCri =
-        cri *
-        (1 + pvpPhysicalEnhance / 100) *
-        (1 + pvpFinalPhysicalEnhance / 100) *
-        (1 - pvpPhysicalDamageReduce / 100) *
-        (1 - pvpFinalPhysicalDamageReduce / 100);
+    let calcPvpFinalPhysicalDamageBonus = pvpFinalPhysicalDamageBonus - targetPvpFinalPhysicalDamageReduction;
+    if (calcPvpFinalPhysicalDamageBonus < -80) { calcPvpFinalPhysicalDamageBonus = -80; }
 
-    /* ⑦ 吸収・反射 */
-    const absorb = normal * (absorbPercent / 100);
-    const reflect = normal * (reflectPercent / 100);
+    let physicalDamageMultiplier =
+        (1 + calcFinalPhysicalDamageBonus / 100) *
+        (calcElementEnhance / 100) *
+        (1 + calcElementBonus / 100) *
+        (1 + calcRaceBonus / 100) *
+        (1 + calcFinalDamageBonus / 100) *
+        (calcSizeEnhance / 100) *
+        (1 + skillDamageBonus / 100);
 
-    /* ⑧ 結果反映 */
-    document.getElementById("resultNormal").textContent = Math.floor(normal);
-    document.getElementById("resultCri").textContent = Math.floor(cri);
-    document.getElementById("resultPvp").textContent = Math.floor(pvpNormal);
-    document.getElementById("resultPvpCri").textContent = Math.floor(pvpCri);
-    document.getElementById("resultAbsorb").textContent = Math.floor(absorb);
-    document.getElementById("resultReflect").textContent = Math.floor(reflect);
+    const normalPhysicalDamage =
+        Math.floor(physicalAttack * (1 + calcFinalPhysicalPenetration / 100) + (physicalDamageBonus - targetPhysicalDamageReduction)) *
+        physicalDamageMultiplier;
+
+    const criticalPhysicalDamage =
+        Math.floor(physicalAttack * (calcCriticalDamage / 100) + (physicalDamageBonus - targetPhysicalDamageReduction)) *
+        physicalDamageMultiplier;
+
+    document.getElementById('normalPhysicalDamage').textContent = Math.max(0, Math.floor(normalPhysicalDamage));
+    document.getElementById('criticalPhysicalDamage').textContent = Math.max(0, Math.floor(criticalPhysicalDamage));
+
+    const normalSkillPhysicalDamage =
+        Math.floor(((skillMultiplier / 100) * physicalAttack + skillAddition) * (1 + calcFinalPhysicalPenetration / 100) +
+        (skillCount * physicalDamageBonus - targetPhysicalDamageReduction)) *
+        physicalDamageMultiplier;
+
+    const criticalSkillPhysicalDamage =
+        Math.floor(((skillMultiplier / 100) * physicalAttack + skillAddition) * (calcCriticalDamage / 100) +
+        (skillCount * physicalDamageBonus - targetPhysicalDamageReduction)) *
+        physicalDamageMultiplier;
+
+    document.getElementById('normalSkillPhysicalDamage').textContent = Math.max(0, Math.floor(normalSkillPhysicalDamage));
+    document.getElementById('criticalSkillPhysicalDamage').textContent = Math.max(0, Math.floor(criticalSkillPhysicalDamage));
+
+    const normalPhysicalLifeSteal =
+        (physicalAttack * (1 + finalPhysicalPenetration / 100) *
+        (1 + finalPhysicalDamageBonus / 100) *
+        (1 + finalDamageBonus / 100) +
+        physicalDamageBonus) *
+        (physicalLifeSteal / 100);
+
+    const criticalPhysicalLifeSteal =
+        (physicalAttack * (criticalDamage / 100) *
+        (1 + finalPhysicalDamageBonus / 100) *
+        (1 + finalDamageBonus / 100) +
+        physicalDamageBonus) *
+        (physicalLifeSteal / 100);
+
+    document.getElementById('normalPhysicalLifeSteal').textContent = Math.max(0, Math.floor(normalPhysicalLifeSteal));
+    document.getElementById('criticalPhysicalLifeSteal').textContent = Math.max(0, Math.floor(criticalPhysicalLifeSteal));
+
+    const normalSkillPhysicalLifeSteal =
+        (((skillMultiplier / 100) * physicalAttack + skillAddition) *
+        (1 + finalPhysicalPenetration / 100) *
+        (1 + finalPhysicalDamageBonus / 100) *
+        (1 + finalDamageBonus / 100) +
+        physicalDamageBonus) *
+        (physicalLifeSteal / 100);
+
+    const criticalSkillPhysicalLifeSteal =
+        (((skillMultiplier / 100) * physicalAttack + skillAddition) *
+        (criticalDamage / 100) *
+        (1 + finalPhysicalDamageBonus / 100) *
+        (1 + finalDamageBonus / 100) +
+        physicalDamageBonus) *
+        (physicalLifeSteal / 100);
+
+    document.getElementById('normalSkillPhysicalLifeSteal').textContent = Math.max(0, Math.floor(normalSkillPhysicalLifeSteal));
+    document.getElementById('criticalSkillPhysicalLifeSteal').textContent = Math.max(0, Math.floor(criticalSkillPhysicalLifeSteal));
+
+    const normalPhysicalReflect =
+        (targetPhysicalAttack *
+        (1 + finalPhysicalDefense / 100) *
+        (1 + finalPhysicalDamageReduction) *
+        (1 + finalDamageReduction) +
+        physicalDamageReduction) *
+        (physicalReflect / 100);
+
+    const criticalPhysicalReflect =
+        (targetPhysicalAttack *
+        (2 + criticalDamageReduction / 100) *
+        (1 + finalPhysicalDamageReduction) *
+        (1 + finalDamageReduction) +
+        physicalDamageReduction) *
+        (physicalReflect / 100);
+
+    document.getElementById('normalPhysicalReflect').textContent = Math.max(0, Math.floor(normalPhysicalReflect));
+    document.getElementById('criticalPhysicalReflect').textContent = Math.max(0, Math.floor(criticalPhysicalReflect));
+
+    const normalSkillPhysicalReflect =
+        (((skillMultiplier / 100) * targetPhysicalAttack + skillAddition) *
+        (1 + finalPhysicalDefense / 100) *
+        (1 + finalPhysicalDamageReduction) *
+        (1 + finalDamageReduction) +
+        physicalDamageReduction) *
+        (physicalReflect / 100);
+
+    const criticalSkillPhysicalReflect =
+        (((skillMultiplier / 100) * targetPhysicalAttack + skillAddition) *
+        (2 + criticalDamageReduction / 100) *
+        (1 + finalPhysicalDamageReduction) *
+        (1 + finalDamageReduction) +
+        physicalDamageReduction) *
+        (physicalReflect / 100);
+
+    document.getElementById('normalSkillPhysicalReflect').textContent = Math.max(0, Math.floor(normalSkillPhysicalReflect));
+    document.getElementById('criticalSkillPhysicalReflect').textContent = Math.max(0, Math.floor(criticalSkillPhysicalReflect));
+
+    let pvpNormalPhysicalDamageBase =
+        (8 * normalPhysicalDamage ** 0.6 + pvpPhysicalDamageBonus - targetPvpPhysicalDamageReduction);
+    if (pvpNormalPhysicalDamageBase < 0) { pvpNormalPhysicalDamageBase = 0; }
+
+    const pvpNormalPhysicalDamage =
+        pvpNormalPhysicalDamageBase * (1 + calcPvpFinalPhysicalDamageBonus / 100);
+
+    let pvpCriticalPhysicalDamageBase =
+        (8 * criticalPhysicalDamage ** 0.6 + pvpPhysicalDamageBonus - targetPvpPhysicalDamageReduction);
+    if (pvpCriticalPhysicalDamageBase < 0) { pvpCriticalPhysicalDamageBase = 0; }
+
+    const pvpCriticalPhysicalDamage =
+        pvpCriticalPhysicalDamageBase * (1 + calcPvpFinalPhysicalDamageBonus / 100);
+
+    document.getElementById('pvpNormalPhysicalDamage').textContent = Math.max(0, Math.floor(pvpNormalPhysicalDamage));
+    document.getElementById('pvpCriticalPhysicalDamage').textContent = Math.max(0, Math.floor(pvpCriticalPhysicalDamage));
+
+    let pvpNormalSkillPhysicalDamageBase =
+        (16 * normalSkillPhysicalDamage ** 0.6 + pvpPhysicalDamageBonus - targetPvpPhysicalDamageReduction);
+    if (pvpNormalSkillPhysicalDamageBase < 0) { pvpNormalSkillPhysicalDamageBase = 0; }
+
+    const pvpNormalSkillPhysicalDamage =
+        pvpNormalSkillPhysicalDamageBase * (1 + calcPvpFinalPhysicalDamageBonus / 100);
+
+    let pvpCriticalSkillPhysicalDamageBase =
+        (16 * criticalSkillPhysicalDamage ** 0.6 + pvpPhysicalDamageBonus - targetPvpPhysicalDamageReduction);
+    if (pvpCriticalSkillPhysicalDamageBase < 0) { pvpCriticalSkillPhysicalDamageBase = 0; }
+
+    const pvpCriticalSkillPhysicalDamage =
+        pvpCriticalSkillPhysicalDamageBase * (1 + calcPvpFinalPhysicalDamageBonus / 100);
+
+    document.getElementById('pvpNormalSkillPhysicalDamage').textContent = Math.max(0, Math.floor(pvpNormalSkillPhysicalDamage));
+    document.getElementById('pvpCriticalSkillPhysicalDamage').textContent = Math.max(0, Math.floor(pvpCriticalSkillPhysicalDamage));
+
+    const pvpNormalPhysicalLifeSteal =
+        (3 * normalPhysicalLifeSteal ** 0.6) * (1 + calcPvpFinalPhysicalDamageBonus / 100);
+
+    const pvpCriticalPhysicalLifeSteal =
+        (3 * criticalPhysicalLifeSteal ** 0.6) * (1 + calcPvpFinalPhysicalDamageBonus / 100);
+
+    document.getElementById('pvpNormalPhysicalLifeSteal').textContent = Math.max(0, Math.floor(pvpNormalPhysicalLifeSteal));
+    document.getElementById('pvpCriticalPhysicalLifeSteal').textContent = Math.max(0, Math.floor(pvpCriticalPhysicalLifeSteal));
+
+    const pvpNormalSkillPhysicalLifeSteal =
+        (6 * normalSkillPhysicalLifeSteal ** 0.6) * (1 + calcPvpFinalPhysicalDamageBonus / 100);
+
+    const pvpCriticalSkillPhysicalLifeSteal =
+        (6 * criticalSkillPhysicalLifeSteal ** 0.6) * (1 + calcPvpFinalPhysicalDamageBonus / 100);
+
+    document.getElementById('pvpNormalSkillPhysicalLifeSteal').textContent = Math.max(0, Math.floor(pvpNormalSkillPhysicalLifeSteal));
+    document.getElementById('pvpCriticalSkillPhysicalLifeSteal').textContent = Math.max(0, Math.floor(pvpCriticalSkillPhysicalLifeSteal));
+
+    const pvpNormalPhysicalReflect =
+        (3 * normalPhysicalReflect ** 0.6) * (1 + pvpFinalPhysicalDamageReduction / 100);
+
+    const pvpCriticalPhysicalReflect =
+        (3 * criticalPhysicalReflect ** 0.6) * (1 + pvpFinalPhysicalDamageReduction / 100);
+
+    document.getElementById('pvpNormalPhysicalReflect').textContent = Math.max(0, Math.floor(pvpNormalPhysicalReflect));
+    document.getElementById('pvpCriticalPhysicalReflect').textContent = Math.max(0, Math.floor(pvpCriticalPhysicalReflect));
+
+    const pvpNormalSkillPhysicalReflect =
+        (6 * normalSkillPhysicalReflect ** 0.6) * (1 + pvpFinalPhysicalDamageReduction / 100);
+
+    const pvpCriticalSkillPhysicalReflect =
+        (6 * criticalSkillPhysicalReflect ** 0.6) * (1 + pvpFinalPhysicalDamageReduction / 100);
+
+    document.getElementById('pvpNormalSkillPhysicalReflect').textContent = Math.max(0, Math.floor(pvpNormalSkillPhysicalReflect));
+    document.getElementById('pvpCriticalSkillPhysicalReflect').textContent = Math.max(0, Math.floor(pvpCriticalSkillPhysicalReflect));
 }
 
 </script>
 <script>
-
 
 /* ============================================
    PART 7: 初期化処理

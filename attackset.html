@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ROXダメージ計算機</title>
+
+<style>
+.tab-container {
+    display: flex;
+    gap: 8px;
+    margin: 10px auto;
+    justify-content: center;
+}
+.tab-button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #fff;
+    border: none;
+}
+.tab-button.attack { background: #d9534f; }
+.tab-button.attack.active { background: #c9302c; }
+.tab-button.defense { background: #5bc0de; }
+.tab-button.defense.active { background: #31b0d5; }
+
+.set-name-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin: 10px auto;
+}
+.set-name-box input {
+    padding: 4px 8px;
+    width: 200px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 攻撃側タブ -->
+<div id="attackTabs" class="tab-container">
+    <button class="tab-button attack" data-set="atk1" draggable="true">攻撃1</button>
+    <button class="tab-button attack" data-set="atk2" draggable="true">攻撃2</button>
+    <button class="tab-button attack" data-set="atk3" draggable="true">攻撃3</button>
+    <button class="tab-button attack" data-set="atk4" draggable="true">攻撃4</button>
+    <button class="tab-button attack" data-set="atk5" draggable="true">攻撃5</button>
+</div>
+
+<div class="set-name-box">
+    <label>攻撃セット名：</label>
+    <input id="attackSetName" type="text">
+    <button id="saveAttackName">保存</button>
+</div>
+
+<!-- 防御側タブ -->
+<div id="defenseTabs" class="tab-container">
+    <button class="tab-button defense" data-set="def1" draggable="true">防御1</button>
+    <button class="tab-button defense" data-set="def2" draggable="true">防御2</button>
+    <button class="tab-button defense" data-set="def3" draggable="true">防御3</button>
+    <button class="tab-button defense" data-set="def4" draggable="true">防御4</button>
+    <button class="tab-button defense" data-set="def5" draggable="true">防御5</button>
+</div>
+
+<div class="set-name-box">
+    <label>防御セット名：</label>
+    <input id="defenseSetName" type="text">
+    <button id="saveDefenseName">保存</button>
+</div>
+
+<button id="shortUrlButton" style="margin:10px auto; display:block;">短縮URLコピー</button>
+
+<form id="calcForm">
+
+<h3>攻撃側</h3>
+
+<label>物理攻撃：</label>
+<input type="number" id="physicalAttack" value="0"><br>
+
+<label>最終物理貫通：</label>
+<input type="number" id="finalPhysicalPenetration" value="0"><br>
+
+<label>CRIダメージ：</label>
+<input type="number" id="criDamage" value="0"><br>
+
+<label>物理増強：</label>
+<input type="number" id="physicalEnhance" value="0"><br>
+
+<label>最終増強：</label>
+<input type="number" id="finalEnhance" value="0"><br>
+
+<label>種族ダメージ増加：</label>
+<input type="number" id="raceDamageIncrease" value="0"><br>
+
+<label>属性ダメージ増加：</label>
+<input type="number" id="attributeDamageIncrease" value="0"><br>
+
+<label>サイズダメージ増加：</label>
+<input type="number" id="sizeDamageIncrease" value="0"><br>
+
+<label>最終ダメージ増加：</label>
+<input type="number" id="finalDamageIncrease" value="0"><br>
+
+<label>ダメージアップ：</label>
+<input type="number" id="damageUp" value="0"><br>
+
+<label>属性強化：</label>
+<input type="number" id="attributeEnhance" value="0"><br>
+
+<label>属性相性：</label>
+<input type="number" id="attributeAffinity" value="100"><br>
+
+<label>武器サイズ補正：</label>
+<input type="number" id="weaponSizeCorrection" value="100"><br>
+
+<label>PVP物理増強：</label>
+<input type="number" id="pvpPhysicalEnhance" value="0"><br>
+
+<label>PVP最終物理増強：</label>
+<input type="number" id="pvpFinalPhysicalEnhance" value="0"><br>
+
+<label>スキル倍率：</label>
+<input type="number" id="skillMultiplier" value="0"><br>
+
+<label>物理HP吸収：</label>
+<input type="number" id="absorbPercent" value="0"><br>
+
+<label>物理ダメージ反射：</label>
+<input type="number" id="reflectPercent" value="0"><br>
+
+<hr>
+
+<h3>防御側</h3>
+
+<label>最終物理防御：</label>
+<input type="number" id="targetFinalPhysicalDefense" value="0"><br>
+
+<label>CRIダメージ軽減：</label>
+<input type="number" id="criDamageReduce" value="0"><br>
+
+<label>物理ダメージ軽減：</label>
+<input type="number" id="physicalDamageReduce" value="0"><br>
+
+<label>最終物理ダメージ軽減：</label>
+<input type="number" id="finalPhysicalDamageReduce" value="0"><br>
+
+<label>種族被ダメージ軽減：</label>
+<input type="number" id="raceDamageReduce" value="0"><br>
+
+<label>属性被ダメージ軽減：</label>
+<input type="number" id="attributeDamageReduce" value="0"><br>
+
+<label>サイズ被ダメージ軽減：</label>
+<input type="number" id="sizeDamageReduce" value="0"><br>
+
+<label>最終被ダメージ軽減：</label>
+<input type="number" id="finalDamageReduce" value="0"><br>
+
+<label>属性耐性：</label>
+<input type="number" id="attributeResistance" value="0"><br>
+
+<label>PVP物理ダメージ軽減：</label>
+<input type="number" id="pvpPhysicalDamageReduce" value="0"><br>
+
+<label>PVP最終物理ダメージ軽減：</label>
+<input type="number" id="pvpFinalPhysicalDamageReduce" value="0"><br>
+
+<button type="button" onclick="calculateDamage()">計算</button>
+
+</form>
+
+<div style="margin-top:20px;">
+    <h3>結果</h3>
+    通常攻撃：<span id="resultNormal">0</span><br>
+    クリティカル：<span id="resultCri">0</span><br>
+    PVPダメージ：<span id="resultPvp">0</span><br>
+    PVPクリティカル：<span id="resultPvpCri">0</span><br>
+    吸収：<span id="resultAbsorb">0</span><br>
+    反射：<span id="resultReflect">0</span><br>
+</div>
+<script>
+
+/* ============================================
+   PART 2: セット保存・読み込み（元フォーム対応）
+============================================ */
+
+function saveSet(key) {
+    const fields = document.querySelectorAll("#calcForm input");
+    const data = {};
+
+    fields.forEach(f => {
+        data[f.id] = f.value;
+    });
+
+    sessionStorage.setItem(key, JSON.stringify(data));
+}
+
+function loadSet(key) {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return;
+
+    const data = JSON.parse(raw);
+
+    Object.keys(data).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = data[id];
+    });
+}
+
+</script>
+<script>
+
+/* ============================================
+   PART 3: セット名保存・反映
+============================================ */
+
+/* セット名を保存する */
+function saveSetName(type, key, name) {
+    const storageKey = type === "attack" ? "attackNames" : "defenseNames";
+    const names = JSON.parse(sessionStorage.getItem(storageKey) || "{}");
+
+    names[key] = name;
+    sessionStorage.setItem(storageKey, JSON.stringify(names));
+}
+
+/* セット名をタブに反映する */
+function loadSetNames() {
+    const atk = JSON.parse(sessionStorage.getItem("attackNames") || "{}");
+    const def = JSON.parse(sessionStorage.getItem("defenseNames") || "{}");
+
+    /* 攻撃タブ反映 */
+    document.querySelectorAll("#attackTabs .tab-button").forEach(btn => {
+        const key = btn.dataset.set;
+        btn.textContent = atk[key] || ("攻撃" + key.replace("atk", ""));
+    });
+
+    /* 防御タブ反映 */
+    document.querySelectorAll("#defenseTabs .tab-button").forEach(btn => {
+        const key = btn.dataset.set;
+        btn.textContent = def[key] || ("防御" + key.replace("def", ""));
+    });
+}
+
+/* セット名入力欄に反映する */
+function updateNameInput(type, key) {
+    const storageKey = type === "attack" ? "attackNames" : "defenseNames";
+    const names = JSON.parse(sessionStorage.getItem(storageKey) || "{}");
+
+    const input = document.getElementById(type + "SetName");
+    input.value = names[key] || "";
+}
+
+</script>
+<script>
+
+/* ============================================
+   PART 4: ドラッグ並び替え（攻撃／防御タブ）
+============================================ */
+
+function enableTabDrag(containerId, storageKey) {
+    const container = document.getElementById(containerId);
+    let dragTarget = null;
+
+    /* ドラッグ開始 */
+    container.addEventListener("dragstart", e => {
+        if (e.target.classList.contains("tab-button")) {
+            dragTarget = e.target;
+            e.dataTransfer.effectAllowed = "move";
+        }
+    });
+
+    /* ドラッグ中（位置判定） */
+    container.addEventListener("dragover", e => {
+        e.preventDefault();
+        const target = e.target.closest(".tab-button");
+        if (!target || target === dragTarget) return;
+
+        const rect = target.getBoundingClientRect();
+        const after = (e.clientX - rect.left) > rect.width / 2;
+
+        container.insertBefore(dragTarget, after ? target.nextSibling : target);
+    });
+
+    /* ドロップ後（順番保存） */
+    container.addEventListener("drop", () => {
+        const order = [...container.querySelectorAll(".tab-button")]
+            .map(btn => btn.dataset.set);
+
+        sessionStorage.setItem(storageKey, JSON.stringify(order));
+    });
+}
+
+/* 保存された順番を復元 */
+function restoreTabOrder(containerId, storageKey) {
+    const container = document.getElementById(containerId);
+    const raw = sessionStorage.getItem(storageKey);
+    if (!raw) return;
+
+    const order = JSON.parse(raw);
+    const buttons = [...container.querySelectorAll(".tab-button")];
+
+    order.forEach(key => {
+        const btn = buttons.find(b => b.dataset.set === key);
+        if (btn) container.appendChild(btn);
+    });
+}
+
+</script>
+<script>
+
+/* ============================================
+   PART 5: 短縮URL生成・復元
+============================================ */
+
+/* 短縮URL生成 */
+function generateShortURL() {
+
+    /* 保存対象セット一覧 */
+    const keys = [
+        "atk1","atk2","atk3","atk4","atk5",
+        "def1","def2","def3","def4","def5"
+    ];
+
+    const data = {};
+
+    /* 各セットのステータスをまとめる */
+    keys.forEach(key => {
+        data[key] = JSON.parse(sessionStorage.getItem(key) || "{}");
+    });
+
+    /* セット名 */
+    data.attackNames = JSON.parse(sessionStorage.getItem("attackNames") || "{}");
+    data.defenseNames = JSON.parse(sessionStorage.getItem("defenseNames") || "{}");
+
+    /* タブ並び順 */
+    data.attackOrder = JSON.parse(sessionStorage.getItem("attackOrder") || "[]");
+    data.defenseOrder = JSON.parse(sessionStorage.getItem("defenseOrder") || "[]");
+
+    /* 圧縮 */
+    const encoded = btoa(JSON.stringify(data));
+
+    /* URL生成 */
+    return `${location.origin}${location.pathname}?s=${encoded}`;
+}
+
+/* ボタン押下 → URLコピー */
+document.getElementById("shortUrlButton").addEventListener("click", () => {
+    const url = generateShortURL();
+    navigator.clipboard.writeText(url);
+    alert("短縮URLをコピーしました！");
+});
+
+/* 短縮URLの展開（復元） */
+function loadShortURLData() {
+    const params = new URLSearchParams(location.search);
+    const encoded = params.get("s");
+    if (!encoded) return;
+
+    try {
+        const data = JSON.parse(atob(encoded));
+
+        /* 全データを sessionStorage に戻す */
+        for (const key in data) {
+            sessionStorage.setItem(key, JSON.stringify(data[key]));
+        }
+
+        /* セット名反映 */
+        loadSetNames();
+
+        /* タブ並び順復元 */
+        restoreTabOrder("attackTabs", "attackOrder");
+        restoreTabOrder("defenseTabs", "defenseOrder");
+
+        /* 最初のセットを読み込み */
+        loadSet("atk1");
+        loadSet("def1");
+
+        /* セット名入力欄反映 */
+        updateNameInput("attack", "atk1");
+        updateNameInput("defense", "def1");
+
+    } catch (e) {
+        console.error("短縮URL展開失敗:", e);
+    }
+}
+
+</script>
+<script>
+
+/* ============================================
+   PART 5: 短縮URL生成・復元
+============================================ */
+
+/* 短縮URL生成 */
+function generateShortURL() {
+
+    /* 保存対象セット一覧 */
+    const keys = [
+        "atk1","atk2","atk3","atk4","atk5",
+        "def1","def2","def3","def4","def5"
+    ];
+
+    const data = {};
+
+    /* 各セットのステータスをまとめる */
+    keys.forEach(key => {
+        data[key] = JSON.parse(sessionStorage.getItem(key) || "{}");
+    });
+
+    /* セット名 */
+    data.attackNames = JSON.parse(sessionStorage.getItem("attackNames") || "{}");
+    data.defenseNames = JSON.parse(sessionStorage.getItem("defenseNames") || "{}");
+
+    /* タブ並び順 */
+    data.attackOrder = JSON.parse(sessionStorage.getItem("attackOrder") || "[]");
+    data.defenseOrder = JSON.parse(sessionStorage.getItem("defenseOrder") || "[]");
+
+    /* 圧縮 */
+    const encoded = btoa(JSON.stringify(data));
+
+    /* URL生成 */
+    return `${location.origin}${location.pathname}?s=${encoded}`;
+}
+
+/* ボタン押下 → URLコピー */
+document.getElementById("shortUrlButton").addEventListener("click", () => {
+    const url = generateShortURL();
+    navigator.clipboard.writeText(url);
+    alert("短縮URLをコピーしました！");
+});
+
+/* 短縮URLの展開（復元） */
+function loadShortURLData() {
+    const params = new URLSearchParams(location.search);
+    const encoded = params.get("s");
+    if (!encoded) return;
+
+    try {
+        const data = JSON.parse(atob(encoded));
+
+        /* 全データを sessionStorage に戻す */
+        for (const key in data) {
+            sessionStorage.setItem(key, JSON.stringify(data[key]));
+        }
+
+        /* セット名反映 */
+        loadSetNames();
+
+        /* タブ並び順復元 */
+        restoreTabOrder("attackTabs", "attackOrder");
+        restoreTabOrder("defenseTabs", "defenseOrder");
+
+        /* 最初のセットを読み込み */
+        loadSet("atk1");
+        loadSet("def1");
+
+        /* セット名入力欄反映 */
+        updateNameInput("attack", "atk1");
+        updateNameInput("defense", "def1");
+
+    } catch (e) {
+        console.error("短縮URL展開失敗:", e);
+    }
+}
+
+</script>
+<script>
+
+/* ============================================
+   PART 6: 計算式（画像の仕様に完全準拠）
+============================================ */
+
+function calculateDamage() {
+
+    const A = id => Number(document.getElementById(id).value) || 0;
+
+    /* 攻撃側 */
+    const physicalAttack = A("physicalAttack");
+    const finalPhysicalPenetration = A("finalPhysicalPenetration");
+    const criDamage = A("criDamage");
+
+    const physicalEnhance = A("physicalEnhance");
+    const finalEnhance = A("finalEnhance");
+
+    const raceDamageIncrease = A("raceDamageIncrease");
+    const attributeDamageIncrease = A("attributeDamageIncrease");
+    const sizeDamageIncrease = A("sizeDamageIncrease");
+    const finalDamageIncrease = A("finalDamageIncrease");
+    const damageUp = A("damageUp");
+
+    const attributeEnhance = A("attributeEnhance");
+    const attributeAffinity = A("attributeAffinity");
+    const weaponSizeCorrection = A("weaponSizeCorrection");
+
+    const pvpPhysicalEnhance = A("pvpPhysicalEnhance");
+    const pvpFinalPhysicalEnhance = A("pvpFinalPhysicalEnhance");
+
+    const skillMultiplier = A("skillMultiplier");
+
+    const absorbPercent = A("absorbPercent");
+    const reflectPercent = A("reflectPercent");
+
+    /* 防御側 */
+    const targetFinalPhysicalDefense = A("targetFinalPhysicalDefense");
+    const criDamageReduce = A("criDamageReduce");
+    const physicalDamageReduce = A("physicalDamageReduce");
+    const finalPhysicalDamageReduce = A("finalPhysicalDamageReduce");
+    const raceDamageReduce = A("raceDamageReduce");
+    const attributeDamageReduce = A("attributeDamageReduce");
+    const sizeDamageReduce = A("sizeDamageReduce");
+    const finalDamageReduce = A("finalDamageReduce");
+    const attributeResistance = A("attributeResistance");
+    const pvpPhysicalDamageReduce = A("pvpPhysicalDamageReduce");
+    const pvpFinalPhysicalDamageReduce = A("pvpFinalPhysicalDamageReduce");
+
+    /* ① 基礎ダメージ */
+    const base = physicalAttack * (1 + finalPhysicalPenetration / 100);
+
+    /* ② 攻撃側補正（全部乗算） */
+    const atkMulti =
+        (1 + physicalEnhance / 100) *
+        (1 + finalEnhance / 100) *
+        (1 + raceDamageIncrease / 100) *
+        (1 + attributeDamageIncrease / 100) *
+        (1 + sizeDamageIncrease / 100) *
+        (1 + finalDamageIncrease / 100) *
+        (1 + damageUp / 100) *
+        (1 + attributeEnhance / 100) *
+        (attributeAffinity / 100) *
+        (weaponSizeCorrection / 100);
+
+    /* ③ 防御側補正（全部減算） */
+    const defMulti =
+        (1 - targetFinalPhysicalDefense / 100) *
+        (1 - physicalDamageReduce / 100) *
+        (1 - finalPhysicalDamageReduce / 100) *
+        (1 - raceDamageReduce / 100) *
+        (1 - attributeDamageReduce / 100) *
+        (1 - sizeDamageReduce / 100) *
+        (1 - finalDamageReduce / 100) *
+        (1 - attributeResistance / 100);
+
+    /* ④ 通常ダメージ */
+    const normal = base * atkMulti * defMulti;
+
+    /* ⑤ クリティカル */
+    const cri = normal * (criDamage / 100) * (1 - criDamageReduce / 100);
+
+    /* ⑥ PVP補正 */
+    const pvpNormal =
+        normal *
+        (1 + pvpPhysicalEnhance / 100) *
+        (1 + pvpFinalPhysicalEnhance / 100) *
+        (1 - pvpPhysicalDamageReduce / 100) *
+        (1 - pvpFinalPhysicalDamageReduce / 100);
+
+    const pvpCri =
+        cri *
+        (1 + pvpPhysicalEnhance / 100) *
+        (1 + pvpFinalPhysicalEnhance / 100) *
+        (1 - pvpPhysicalDamageReduce / 100) *
+        (1 - pvpFinalPhysicalDamageReduce / 100);
+
+    /* ⑦ 吸収・反射 */
+    const absorb = normal * (absorbPercent / 100);
+    const reflect = normal * (reflectPercent / 100);
+
+    /* ⑧ 結果反映 */
+    document.getElementById("resultNormal").textContent = Math.floor(normal);
+    document.getElementById("resultCri").textContent = Math.floor(cri);
+    document.getElementById("resultPvp").textContent = Math.floor(pvpNormal);
+    document.getElementById("resultPvpCri").textContent = Math.floor(pvpCri);
+    document.getElementById("resultAbsorb").textContent = Math.floor(absorb);
+    document.getElementById("resultReflect").textContent = Math.floor(reflect);
+}
+
+</script>
+<script>
+
+
+/* ============================================
+   PART 7: 初期化処理
+============================================ */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    /* タブ並び順復元 */
+    restoreTabOrder("attackTabs", "attackOrder");
+    restoreTabOrder("defenseTabs", "defenseOrder");
+
+    /* ドラッグ並び替え有効化 */
+    enableTabDrag("attackTabs", "attackOrder");
+    enableTabDrag("defenseTabs", "defenseOrder");
+
+    /* セット名反映 */
+    loadSetNames();
+
+    /* 短縮URLデータがあれば復元 */
+    loadShortURLData();
+
+    /* 最初のセットを読み込み */
+    loadSet("atk1");
+    loadSet("def1");
+
+    /* セット名入力欄反映 */
+    updateNameInput("attack", "atk1");
+    updateNameInput("defense", "def1");
+
+    /* タブクリック時の動作 */
+    document.querySelectorAll("#attackTabs .tab-button").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const key = btn.dataset.set;
+
+            /* セット読み込み */
+            loadSet(key);
+
+            /* セット名入力欄反映 */
+            updateNameInput("attack", key);
+
+            /* アクティブ表示 */
+            document.querySelectorAll("#attackTabs .tab-button")
+                .forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+        });
+    });
+
+    document.querySelectorAll("#defenseTabs .tab-button").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const key = btn.dataset.set;
+
+            /* セット読み込み */
+            loadSet(key);
+
+            /* セット名入力欄反映 */
+            updateNameInput("defense", key);
+
+            /* アクティブ表示 */
+            document.querySelectorAll("#defenseTabs .tab-button")
+                .forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+        });
+    });
+
+    /* セット名保存ボタン */
+    document.getElementById("saveAttackName").addEventListener("click", () => {
+        const active = document.querySelector("#attackTabs .tab-button.active");
+        if (!active) return;
+
+        const key = active.dataset.set;
+        const name = document.getElementById("attackSetName").value;
+
+        saveSetName("attack", key, name);
+        loadSetNames();
+    });
+
+    document.getElementById("saveDefenseName").addEventListener("click", () => {
+        const active = document.querySelector("#defenseTabs .tab-button.active");
+        if (!active) return;
+
+        const key = active.dataset.set;
+        const name = document.getElementById("defenseSetName").value;
+
+        saveSetName("defense", key, name);
+        loadSetNames();
+    });
+
+});
+
+</script>
+</body>
+</html>

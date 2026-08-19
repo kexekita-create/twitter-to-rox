@@ -186,17 +186,20 @@
    PART 2: セット保存・読み込み（元フォーム対応）
 ============================================ */
 
-function saveSet(key) {
-    const fields = document.querySelectorAll("#calcForm input");
+function saveSet(type, key) {
     const data = {};
 
-    fields.forEach(f => {
-        data[f.id] = f.value;
+    /* 攻撃側 or 防御側のステータスを保存 */
+    document.querySelectorAll(`#${type}Area input`).forEach(input => {
+        data[input.id] = input.value;
     });
 
     sessionStorage.setItem(key, JSON.stringify(data));
-}
 
+    /* ★タブ名更新（重要） */
+    loadSetNames();
+}
+    
 function loadSet(key) {
     const raw = sessionStorage.getItem(key);
     if (!raw) return;
@@ -216,13 +219,13 @@ function loadSet(key) {
    PART 3: セット名保存・反映
 ============================================ */
 
-/* セット名を保存する */
 function saveSetName(type, key, name) {
-    const storageKey = type === "attack" ? "attackNames" : "defenseNames";
-    const names = JSON.parse(sessionStorage.getItem(storageKey) || "{}");
-
+    const names = JSON.parse(sessionStorage.getItem(type + "Names") || "{}");
     names[key] = name;
-    sessionStorage.setItem(storageKey, JSON.stringify(names));
+    sessionStorage.setItem(type + "Names", JSON.stringify(names));
+
+    /* ★タブ名更新（重要） */
+    loadSetNames();
 }
 
 /* セット名をタブに反映する */
@@ -258,7 +261,37 @@ function updateNameInput(type, key) {
 /* ============================================
    PART 4: ドラッグ並び替え（攻撃／防御タブ）
 ============================================ */
+document.querySelectorAll('#attackTabs .tab-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const key = btn.dataset.set;
 
+        /* タブの見た目切り替え */
+        document.querySelectorAll('#attackTabs .tab-button')
+            .forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        /* セット内容読み込み */
+        loadAttackSet(key);
+
+        /* ★セット名入力欄を反映（重要） */
+        updateNameInput("attack", key);
+    });
+});
+
+document.querySelectorAll('#defenseTabs .tab-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const key = btn.dataset.set;
+
+        document.querySelectorAll('#defenseTabs .tab-button')
+            .forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        loadDefenseSet(key);
+
+        /* ★セット名入力欄を反映（重要） */
+        updateNameInput("defense", key);
+    });
+});
 function enableTabDrag(containerId, storageKey) {
     const container = document.getElementById(containerId);
     let dragTarget = null;
